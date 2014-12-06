@@ -79,7 +79,7 @@ public class ProtobufSourceUtils {
     final public static String SYSLOG_SEVERITY = "Severity";
     final public static String EVENT_STATUS = "flume.syslog.status";
     final public static Integer MIN_SIZE = 10;
-    final public static Integer DEFAULT_SIZE = 2500;
+    final public static Integer DEFAULT_SIZE = 4096;
     private final boolean isUdp;
     private boolean isBadEvent;
     private boolean isIncompleteEvent;

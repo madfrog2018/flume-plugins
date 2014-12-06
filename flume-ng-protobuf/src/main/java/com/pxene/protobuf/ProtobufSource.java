@@ -18,14 +18,19 @@
  */
 package com.pxene.protobuf;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import org.apache.commons.io.HexDump;
 import org.apache.flume.ChannelException;
 import org.apache.flume.Context;
 import org.apache.flume.CounterGroup;
@@ -37,15 +42,7 @@ import org.apache.flume.source.AbstractSource;
 import org.apache.flume.source.SyslogSourceConfigurationConstants;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFactory;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
+import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.protobuf.ProtobufDecoder;
 import org.jboss.netty.handler.codec.protobuf.ProtobufEncoder;
@@ -93,12 +90,28 @@ public class ProtobufSource extends AbstractSource
         
         @Override
         public void messageReceived(ChannelHandlerContext ctx, MessageEvent mEvent) {
-            TanxBidding.BidRequest req = (TanxBidding.BidRequest) mEvent.getMessage();
-//        	TanxBidding.BidRequest.parseFrom(mEvent.getMessage())
-            String bidId = req.getBid();
-            logger.debug("update!!!!!!!!!!!!!!!!!");
-            logger.debug("bidId is --------------------- " + bidId);
-            logger.debug(mEvent.getMessage().toString());
+            ChannelBuffer buffer = (ChannelBuffer) mEvent.getMessage();
+            ByteBuffer bb = buffer.toByteBuffer();
+            int remaining = bb.remaining();
+            logger.info("remaining is " + remaining);
+            byte[] buf = new byte[remaining];
+            bb.get(buf);
+            try {
+                HexDump.dump(buf, 0, System.out, 0);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            int length = buffer.capacity();
+            logger.info("length is " + length);
+            logger.info("updateingggg");
+            byte[] byteBuffer = new byte[length];
+            byteBuffer = buffer.array();
+            try {
+                TanxBidding.BidRequest req = TanxBidding.BidRequest.parseFrom(byteBuffer);
+                logger.info("bid is " + req.getBid());
+            } catch (InvalidProtocolBufferException e) {
+                e.printStackTrace();
+            }
 
 //            while (buff.readable()) {
 //                Event e = ProtobufSourceUtils.extractEvent(buff);
@@ -130,18 +143,18 @@ public class ProtobufSource extends AbstractSource
             public ChannelPipeline getPipeline() {
                 protobufHandler handler = new protobufHandler();
 //                handler.setEventSize(eventSize);
-//                handler.setFormater(formaterProp);
-//                handler.setKeepFields(keepFields);
+                handler.setFormater(formaterProp);
+                handler.setKeepFields(keepFields);
                 //set protobuf decoder
                 ChannelPipeline pipeline = Channels.pipeline();
-                pipeline.addLast("frameDecoder",
-                        new ProtobufVarint32FrameDecoder());
-                pipeline.addLast("protobufDecoder", new ProtobufDecoder(TanxBidding.BidRequest.getDefaultInstance()));
-                pipeline.addLast("frameEncoder", new ProtobufVarint32LengthFieldPrepender());
-                pipeline.addLast("protobufEncoder", new ProtobufEncoder());
-                pipeline.addLast("handler", handler);
-                return pipeline;
-//                return Channels.pipeline(handler);
+//                pipeline.addLast("frameDecoder",
+//                        new ProtobufVarint32FrameDecoder());
+//                pipeline.addLast("protobufDecoder", new ProtobufDecoder(TanxBidding.BidRequest.getDefaultInstance()));
+//                pipeline.addLast("frameEncoder", new ProtobufVarint32LengthFieldPrepender());
+//                pipeline.addLast("protobufEncoder", new ProtobufEncoder());
+//                pipeline.addLast("handler", handler);
+//                return pipeline;
+                return Channels.pipeline(handler);
             }
         });
 

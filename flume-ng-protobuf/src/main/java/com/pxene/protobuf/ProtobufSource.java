@@ -108,6 +108,7 @@ public class ProtobufSource extends AbstractSource
             byteBuffer = buffer.array();
             try {
                 TanxBidding.BidRequest req = TanxBidding.BidRequest.parseFrom(byteBuffer);
+                req.getAllFields();
                 logger.info("bid is " + req.getBid());
             } catch (InvalidProtocolBufferException e) {
                 e.printStackTrace();
@@ -146,7 +147,7 @@ public class ProtobufSource extends AbstractSource
                 handler.setFormater(formaterProp);
                 handler.setKeepFields(keepFields);
                 //set protobuf decoder
-                ChannelPipeline pipeline = Channels.pipeline();
+//                ChannelPipeline pipeline = Channels.pipeline();
 //                pipeline.addLast("frameDecoder",
 //                        new ProtobufVarint32FrameDecoder());
 //                pipeline.addLast("protobufDecoder", new ProtobufDecoder(TanxBidding.BidRequest.getDefaultInstance()));

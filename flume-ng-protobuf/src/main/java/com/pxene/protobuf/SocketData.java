@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,7 +14,11 @@ import java.util.Set;
 import org.apache.commons.io.HexDump;
 import org.apache.log4j.Logger;
 
+import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
+import com.google.protobuf.UnmodifiableLazyStringList;
+import com.pxene.protobuf.TanxBidding.BidRequest;
 import com.pxene.protobuf.TanxBidding.BidRequest.AdzInfo;
 
 /**
@@ -57,36 +63,53 @@ public class SocketData {
 			FileInputStream inputStream = new FileInputStream(file);
             byte[] result = new byte[inputStream.available()];
             inputStream.read(result);
-            System.out.println(result);
             TanxBidding.BidRequest req = TanxBidding.BidRequest.parseFrom(result);
+            List<Map<String, String>> list = new ArrayList<Map<String,String>>();
             Map<FieldDescriptor, Object> fields = req.getAllFields();
-            Set<FieldDescriptor> maps = fields.keySet();
-            for (FieldDescriptor fieldDescriptor : maps) {
-				
-            	String name = fieldDescriptor.getName();
-            	Object value = fields.get(name);
-            	logger.info("value is " + (String)value);
-            	if (value instanceof AdzInfo) {
-					
-            		AdzInfo adzInfo = (AdzInfo) value;
-            		Map<FieldDescriptor, Object> adzInfoFileds = adzInfo.getAllFields();
-            		Set<FieldDescriptor> adzInfoKeys = adzInfoFileds.keySet();
-            		for (FieldDescriptor key : adzInfoKeys) {
-						
-            			String keyName = key.getName();
-            			String keyValue = (String) adzInfoFileds.get(keyName);
+            Set<FieldDescriptor> fieldDescriptors = fields.keySet();
+            for (FieldDescriptor fieldDescriptor : fieldDescriptors) {
+            	Map<String, String> map = new HashMap<String, String>();
+//            	fieldDescriptor.getJavaType() == JavaType.
+            	if (fieldDescriptor.getJavaType() == JavaType.INT) {
+            		if (fields.get(fieldDescriptor) instanceof Integer) {
+            			map.put(fieldDescriptor.getName(), String.valueOf(fields.get(fieldDescriptor)));
+					} else {
+						logger.info("is JavaType.INT not Integer");
 					}
-            		
-            		
+					list.add(map);
+				}else if (fieldDescriptor.getJavaType() == JavaType.STRING) {
+					if (fields.get(fieldDescriptor) instanceof UnmodifiableLazyStringList) {
+						@SuppressWarnings("unchecked")
+						List<String> strings = (List<String>) fields.get(fieldDescriptor);
+						StringBuilder fieldStringBuilder = new StringBuilder();
+						for (String string : strings) {
+							fieldStringBuilder.append(string);
+							fieldStringBuilder.append(new Character((char) 0x01));
+						}
+						map.put(fieldDescriptor.getName(), fieldStringBuilder.toString());
+					} else {
+						map.put(fieldDescriptor.getName(), (String)fields.get(fieldDescriptor));
+					}
+					list.add(map);
+				}else if (fieldDescriptor.getJavaType() == JavaType.MESSAGE) {
+//					logger.info(fieldDescriptor.toProto().getRepeatedFieldCount(fieldDescriptor));
+//					Object subClass = fields.get(fieldDescriptor);
+//					if (subClass instanceof AdzInfo) {
+//						
+//						AdzInfo adzInfo = (AdzInfo) subClass;
+//						adzInfoFields = adzInfo.getAllFields();
+						
+					}
+					
 				}
-            	System.out.println("name is " + name);
-			}
+
+//			}
 //            OutputStream out1 = socket.getOutputStream();
 //            out.write(result);
 //            socket.close();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("error is " + e.toString());
         }
     }
 }

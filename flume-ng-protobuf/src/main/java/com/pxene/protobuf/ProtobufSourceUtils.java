@@ -390,6 +390,8 @@ public class ProtobufSourceUtils {
     public void setKeepFields(Boolean keepFields) {
         this.keepFields= keepFields;
     }
+    
+    public String MessageHandle(Byte)
 }
 
 

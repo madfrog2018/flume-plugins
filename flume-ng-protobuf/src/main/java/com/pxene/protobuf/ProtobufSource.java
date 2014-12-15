@@ -113,7 +113,8 @@ public class ProtobufSource extends AbstractSource
             } catch (InvalidProtocolBufferException e) {
                 e.printStackTrace();
             }
-
+            
+            
 //            while (buff.readable()) {
 //                Event e = ProtobufSourceUtils.extractEvent(buff);
 //                if (e == null) {

@@ -456,11 +456,10 @@ public class ProtobufSourceUtils {
         if (userVertical.isEmpty()) {
         	sBuilder.append(NULL).append(spacers);
 		} else {
-			StringBuilder userVerticalStringBuilder = new StringBuilder();
 			for (Integer integer : userVertical) {
 				sBuilder.append(integer).append(charSpacers);
 			}
-			sBuilder.append(getSubString(userVerticalStringBuilder)).append(spacers);
+			getSubString(sBuilder).append(spacers);
 		}
         
         if (req.hasTidVersion()) {
@@ -474,7 +473,6 @@ public class ProtobufSourceUtils {
         
         if (req.hasHostedMatchData()) {
 			sBuilder.append(req.getHostedMatchData()).append(spacers);
-		
 		} else {
 			sBuilder.append(NULL).append(spacers);
 		}
@@ -496,8 +494,8 @@ public class ProtobufSourceUtils {
 				userAtrributeTimestampBuilder.append(userAttribute.getTimestamp()).append(charSpacers);
 			}
 			
-			sBuilder.append(getSubString(userAtrributeIdBuilder)).append(spacers);
-			sBuilder.append(getSubString(userAtrributeTimestampBuilder)).append(spacers);
+			sBuilder.append(getSubString(userAtrributeIdBuilder).toString()).append(spacers);
+			sBuilder.append(getSubString(userAtrributeTimestampBuilder).toString()).append(spacers);
 			
 		}
         

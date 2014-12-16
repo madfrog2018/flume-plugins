@@ -18,6 +18,7 @@
  */
 package com.pxene.protobuf;
 
+import org.apache.commons.io.HexDump;
 import org.apache.flume.Event;
 import org.apache.flume.annotations.InterfaceAudience;
 import org.apache.flume.annotations.InterfaceStability;
@@ -26,12 +27,24 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.flume.source.SyslogSourceConfigurationConstants;
+
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.ProtocolStringList;
+import com.pxene.protobuf.TanxBidding.BidRequest.AdzInfo;
+import com.pxene.protobuf.TanxBidding.BidRequest.ContentCategory;
+import com.pxene.protobuf.TanxBidding.BidRequest.Mobile;
+import com.pxene.protobuf.TanxBidding.BidRequest.UserAttribute;
+import com.pxene.protobuf.TanxBidding.BidRequest.Mobile.Device;
+
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
@@ -390,8 +403,397 @@ public class ProtobufSourceUtils {
     public void setKeepFields(Boolean keepFields) {
         this.keepFields= keepFields;
     }
+
+    public Event MessageHandle(byte[] bytes) throws InvalidProtocolBufferException {
+    	
+        TanxBidding.BidRequest req = TanxBidding.BidRequest.parseFrom(bytes);
+        StringBuilder sBuilder = new StringBuilder();
+        String NULL = "NULL";
+        String spacers = "|";
+        Character charSpacers = new Character((char) 0x01);
+        sBuilder.append(req.getVersion()).append(spacers);
+        sBuilder.append(req.getBid()).append(spacers);
+        
+        if (req.hasIsTest()) {
+        	sBuilder.append(req.getIsTest()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (req.hasIsPing()) {
+        	sBuilder.append(req.getIsPing()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (req.hasTid()) {
+        	sBuilder.append(req.getTid()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (req.hasIp()) {
+			sBuilder.append(req.getIp()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (req.hasUserAgent()) {
+			
+        	sBuilder.append(req.getUserAgent()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (req.hasTimezoneOffset()) {
+        	
+        	sBuilder.append(req.getTimezoneOffset()).append(spacers);
+        } else {
+        	sBuilder.append(NULL).append(spacers);
+        }
+        
+        List<Integer> userVertical = req.getUserVerticalList();
+        if (userVertical.isEmpty()) {
+        	sBuilder.append(NULL).append(spacers);
+		} else {
+			StringBuilder userVerticalStringBuilder = new StringBuilder();
+			for (Integer integer : userVertical) {
+				sBuilder.append(integer).append(charSpacers);
+			}
+			sBuilder.append(getSubString(userVerticalStringBuilder)).append(spacers);
+		}
+        
+        if (req.hasTidVersion()) {
+        	sBuilder.append(req.getTidVersion()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        
+        sBuilder.append(req.getPrivateInfoCount()).append(spacers);
+        
+        if (req.hasHostedMatchData()) {
+			sBuilder.append(req.getHostedMatchData()).append(spacers);
+		
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        sBuilder.append(req.getUserAttributeCount()).append(spacers);
+        
+        List<UserAttribute> userAttributeList = req.getUserAttributeList();
+        if (userAttributeList.isEmpty()) {
+			
+        	sBuilder.append(NULL).append(spacers);
+        	sBuilder.append(NULL).append(spacers);
+		} else {
+			
+			StringBuilder userAtrributeIdBuilder = new StringBuilder();
+			StringBuilder userAtrributeTimestampBuilder = new StringBuilder();
+			for (UserAttribute userAttribute : userAttributeList) {
+				
+				userAtrributeIdBuilder.append(userAttribute.getId()).append(charSpacers);
+				userAtrributeTimestampBuilder.append(userAttribute.getTimestamp()).append(charSpacers);
+			}
+			
+			sBuilder.append(getSubString(userAtrributeIdBuilder)).append(spacers);
+			sBuilder.append(getSubString(userAtrributeTimestampBuilder)).append(spacers);
+			
+		}
+        
+        ProtocolStringList excludedUrls = req.getExcludedClickThroughUrlList();
+        if (excludedUrls.isEmpty()) {
+        	sBuilder.append(NULL).append(spacers);
+		} else {
+			StringBuilder excludedUrlsBuilder = new StringBuilder();
+			for (String string : excludedUrls) {
+				excludedUrlsBuilder.append(string).append(charSpacers);
+			}
+			sBuilder.append(getSubString(excludedUrlsBuilder)).append(spacers);
+		}
+        
+        if (req.hasUrl()) {
+			
+        	sBuilder.append(req.getUrl()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (req.hasCategory()) {
+			sBuilder.append(req.getCategory()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (req.hasAdxType()) {
+			sBuilder.append(req.getAdxType()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (req.hasAnonymousId()) {
+        	sBuilder.append(req.getAnonymousId()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (req.hasDetectedLanguage()) {
+        	sBuilder.append(req.getDetectedLanguage()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (req.hasCategoryVersion()) {
+			sBuilder.append(req.getCategoryVersion()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        List<AdzInfo> adzInfos = req.getAdzinfoList();
+        StringBuilder adzInfoIdBuilder = new StringBuilder();
+        StringBuilder adzInfoPidBuilder = new  StringBuilder();
+        StringBuilder adzInfoSizeBuilder = new StringBuilder();
+        StringBuilder adzInfoAdBidCountBuilder = new StringBuilder();
+        StringBuilder adzInfoViewTypeBuilder = new StringBuilder();
+        StringBuilder adzInfoExcludedFilterBuilder = new StringBuilder();
+        StringBuilder adzInfoMinCPMPriceBuilder = new StringBuilder();
+        StringBuilder adzInfoViewScreenBuilder = new StringBuilder();
+        StringBuilder adzInfoPageSessionAdIdxbBuilder = new StringBuilder();
+        for (AdzInfo adzInfo : adzInfos) {
+			
+        	if (adzInfo.hasId()) {
+				adzInfoIdBuilder.append(adzInfo.getId()).append(charSpacers);
+			}
+        	if (adzInfo.hasPid()) {
+				adzInfoPidBuilder.append(adzInfo.getPid()).append(charSpacers);
+			}
+        	if (adzInfo.hasSize()) {
+				adzInfoSizeBuilder.append(adzInfo.getSize()).append(charSpacers);
+			}
+        	if (adzInfo.hasAdBidCount()) {
+				adzInfoAdBidCountBuilder.append(adzInfo.getAdBidCount()).append(charSpacers);
+			}
+        	
+        	List<Integer> viewTypes = adzInfo.getViewTypeList();
+        	for (Integer integer : viewTypes) {
+				
+        		adzInfoViewTypeBuilder.append(integer).append(charSpacers);
+			}
+        	
+        	List<Integer> excludedFilters = adzInfo.getExcludedFilterList();
+        	for (Integer integer1 : excludedFilters) {
+				adzInfoExcludedFilterBuilder.append(integer1).append(charSpacers);
+			}
+        	
+        	if (adzInfo.hasMinCpmPrice()) {
+				
+        		adzInfoMinCPMPriceBuilder.append(adzInfo.getMinCpmPrice()).append(charSpacers);
+			}
+        	
+        	
+        	if (adzInfo.hasViewScreen()) {
+				adzInfoViewScreenBuilder.append(adzInfo.getViewScreen().name()).append(charSpacers);
+			}
+        	
+        	if (adzInfo.hasPageSessionAdIdx()) {
+				adzInfoPageSessionAdIdxbBuilder.append(adzInfo.getPageSessionAdIdx()).append(charSpacers);
+			}
+		}
+        
+        sBuilder.append(getSubString(adzInfoIdBuilder)).append(spacers);
+        sBuilder.append(getSubString(adzInfoPidBuilder)).append(spacers);
+        sBuilder.append(getSubString(adzInfoSizeBuilder)).append(spacers);
+        sBuilder.append(getSubString(adzInfoAdBidCountBuilder)).append(spacers);
+        sBuilder.append(getSubString(adzInfoViewTypeBuilder)).append(spacers);
+        sBuilder.append(getSubString(adzInfoExcludedFilterBuilder)).append(spacers);
+        sBuilder.append(getSubString(adzInfoMinCPMPriceBuilder)).append(spacers);
+        sBuilder.append(getSubString(adzInfoViewScreenBuilder)).append(spacers);
+        if (req.hasPageSessionId()) {
+			sBuilder.append(req.getPageSessionId()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        sBuilder.append(getSubString(adzInfoPageSessionAdIdxbBuilder)).append(spacers);
+        
+        List<Integer> excludedSensitiveCategorys = req.getExcludedSensitiveCategoryList();
+        StringBuilder excludedSensitiveBuilder = new StringBuilder();
+        if (excludedSensitiveCategorys.isEmpty()) {
+        	sBuilder.append(NULL).append(spacers);
+		} else {
+			for (Integer integer : excludedSensitiveCategorys) {
+				excludedSensitiveBuilder.append(integer).append(charSpacers);
+			}
+			sBuilder.append(getSubString(excludedSensitiveBuilder)).append(spacers);
+		}
+        
+        List<Integer> excludedAdCategorys = req.getExcludedAdCategoryList();
+        StringBuilder excludedAdCategorysBuilder = new StringBuilder();
+        if (excludedAdCategorys.isEmpty()) {
+        	sBuilder.append(NULL).append(spacers);
+		} else {
+			for (Integer integer : excludedAdCategorys) {
+				excludedAdCategorysBuilder.append(integer).append(charSpacers);
+			}
+			sBuilder.append(getSubString(excludedAdCategorysBuilder)).append(spacers);
+		}
+        
+        sBuilder.append(req.getContentCategoriesCount()).append(spacers);
+        
+        List<ContentCategory> contentCategories = req.getContentCategoriesList();
+        StringBuilder contentCategoryIdBuilder = new StringBuilder();
+        StringBuilder contentCategoryConfidenceLevelBuilder = new StringBuilder();
+        if (contentCategories.isEmpty()) {
+			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(NULL).append(spacers);
+		} else {
+			for (ContentCategory contentCategory : contentCategories) {
+            	
+            	if (contentCategory.hasId()) {
+					contentCategoryIdBuilder.append(contentCategory.getId()).append(charSpacers);
+				} else {
+					contentCategoryIdBuilder.append(NULL).append(charSpacers);
+				}
+            	if (contentCategory.hasConfidenceLevel()) {
+					contentCategoryConfidenceLevelBuilder.append(contentCategory.getConfidenceLevel()).append(charSpacers);
+				} else {
+					contentCategoryIdBuilder.append(NULL).append(charSpacers);
+				}
+			}
+			sBuilder.append(getSubString(contentCategoryIdBuilder)).append(spacers);
+			sBuilder.append(getSubString(contentCategoryConfidenceLevelBuilder)).append(spacers);
+		}
+        
+        //获取移动设备的信息
+        Mobile mobile = req.getMobile();
+        if (mobile.hasIsApp()) {
+			sBuilder.append(mobile.getIsApp()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (mobile.hasAdNum()) {
+			sBuilder.append(mobile.getAdNum()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        ProtocolStringList mobileAdKeywords = mobile.getAdKeywordList();
+        if (mobileAdKeywords.isEmpty()) {
+			sBuilder.append(NULL).append(spacers);
+		} else {
+			StringBuilder adKeywordsBuilder = new StringBuilder();
+			for (String string : mobileAdKeywords) {
+				adKeywordsBuilder.append(string).append(charSpacers);
+			}
+			sBuilder.append(getSubString(adKeywordsBuilder)).append(spacers);
+		}
+        
+        if (mobile.hasPackageName()) {
+			sBuilder.append(mobile.getPackageName()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        Device device = mobile.getDevice();
+        if (device.hasPlatform()) {
+			sBuilder.append(device.getPlatform()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (device.hasBrand()) {
+			sBuilder.append(device.getBrand()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (device.hasModel()) {
+			sBuilder.append(device.getModel()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (device.hasOs()) {
+			sBuilder.append(device.getOs()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (device.hasOsVersion()) {
+			sBuilder.append(device.getOsVersion()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+       
+        if (device.hasNetwork()) {
+			sBuilder.append(device.getNetwork()).append(spacers); 
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (device.hasOperator()) {
+			sBuilder.append(device.getOperator()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (device.hasLongitude()) {
+			sBuilder.append(device.getLongitude()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (device.hasLatitude()) {
+			sBuilder.append(device.getLatitude()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (device.hasDeviceSize()) {
+        	sBuilder.append(device.getDeviceSize()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (device.hasDevicePixelRatio()) {
+			sBuilder.append(device.getDevicePixelRatio()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+        
+        if (device.hasDeviceId()) {
+			sBuilder.append(device.getDeviceId()).append(spacers);
+		} else {
+			sBuilder.append(NULL).append(spacers);
+		}
+       
+        if (logger.isDebugEnabled()) {
+        	 logger.debug(sBuilder.toString());
+             try {
+     			HexDump.dump(sBuilder.toString().getBytes(), 0, System.out, 0);
+     			
+     		} catch (Exception e) {
+     			logger.debug("debug info exception is " + e.toString());
+     		}
+		}
+        byte[] body = sBuilder.toString().getBytes();
+        logger.info("call eventBuilder");
+        logger.info(sBuilder.toString());
+		return EventBuilder.withBody(sBuilder.toString(), Charset.defaultCharset());
+    }
+    	
     
-    public String MessageHandle(Byte)
+    public static StringBuilder getSubString(StringBuilder sb){
+    	
+    	if (sb == null) {
+			return null;
+		}
+    	
+    	String subString = sb.toString().substring(0, sb.length()-1);
+    	sb.delete(0, sb.length()).append(subString);
+    	return sb;
+    }
 }
 
 

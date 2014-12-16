@@ -91,29 +91,43 @@ public class ProtobufSource extends AbstractSource
         @Override
         public void messageReceived(ChannelHandlerContext ctx, MessageEvent mEvent) {
             ChannelBuffer buffer = (ChannelBuffer) mEvent.getMessage();
-            ByteBuffer bb = buffer.toByteBuffer();
-            int remaining = bb.remaining();
-            logger.info("remaining is " + remaining);
-            byte[] buf = new byte[remaining];
-            bb.get(buf);
-            try {
-                HexDump.dump(buf, 0, System.out, 0);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            ByteBuffer bb = buffer.toByteBuffer();
+//            int remaining = bb.remaining();
+//            logger.info("remaining is " + remaining);
+//            byte[] buf = new byte[remaining];
+//            bb.get(buf);
+//            try {
+//                HexDump.dump(buf, 0, System.out, 0);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
             int length = buffer.capacity();
             logger.info("length is " + length);
-            logger.info("updateingggg");
             byte[] byteBuffer = new byte[length];
             byteBuffer = buffer.array();
-            try {
-                TanxBidding.BidRequest req = TanxBidding.BidRequest.parseFrom(byteBuffer);
-                req.getAllFields();
-                logger.info("bid is " + req.getBid());
-            } catch (InvalidProtocolBufferException e) {
-                e.printStackTrace();
-            }
-            
+
+//            while(buffer.readable()) {
+            	
+            	try {
+					Event e = ProtobufSourceUtils.MessageHandle(byteBuffer);
+					if (e == null) {
+	                    logger.info("handle message error");
+//	                    continue;
+	                }
+	                try {
+	                    getChannelProcessor().processEvent(e);
+	                    logger.info("events success");
+	                    counterGroup.incrementAndGet("events.success");
+	                } catch (ChannelException ex) {
+	                    counterGroup.incrementAndGet("events.dropped");
+	                    logger.error("Error writting to channel, event dropped", ex);
+	                }
+				} catch (InvalidProtocolBufferException e) {
+					counterGroup.incrementAndGet("events.dropped");
+					logger.error("invalid protocolbuffer error is " + e.toString());
+					
+				}
+//            }
             
 //            while (buff.readable()) {
 //                Event e = ProtobufSourceUtils.extractEvent(buff);

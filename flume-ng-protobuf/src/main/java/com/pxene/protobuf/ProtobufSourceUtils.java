@@ -407,54 +407,52 @@ public class ProtobufSourceUtils {
     public Event MessageHandle(byte[] bytes) throws InvalidProtocolBufferException {
     	
         TanxBidding.BidRequest req = TanxBidding.BidRequest.parseFrom(bytes);
-        StringBuilder sBuilder = new StringBuilder();
-        String NULL = "NULL";
         String spacers = "|";
         Character charSpacers = new Character((char) 0x01);
+        StringBuilder sBuilder = new StringBuilder();
         sBuilder.append(req.getVersion()).append(spacers);
         sBuilder.append(req.getBid()).append(spacers);
-        
         if (req.hasIsTest()) {
         	sBuilder.append(req.getIsTest()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (req.hasIsPing()) {
         	sBuilder.append(req.getIsPing()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (req.hasTid()) {
         	sBuilder.append(req.getTid()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (req.hasIp()) {
 			sBuilder.append(req.getIp()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (req.hasUserAgent()) {
 			
         	sBuilder.append(req.getUserAgent()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (req.hasTimezoneOffset()) {
         	
         	sBuilder.append(req.getTimezoneOffset()).append(spacers);
         } else {
-        	sBuilder.append(NULL).append(spacers);
+        	sBuilder.append(spacers);
         }
         
         List<Integer> userVertical = req.getUserVerticalList();
         if (userVertical.isEmpty()) {
-        	sBuilder.append(NULL).append(spacers);
+        	sBuilder.append(spacers);
 		} else {
 			for (Integer integer : userVertical) {
 				sBuilder.append(integer).append(charSpacers);
@@ -465,7 +463,7 @@ public class ProtobufSourceUtils {
         if (req.hasTidVersion()) {
         	sBuilder.append(req.getTidVersion()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         
@@ -473,8 +471,9 @@ public class ProtobufSourceUtils {
         
         if (req.hasHostedMatchData()) {
 			sBuilder.append(req.getHostedMatchData()).append(spacers);
+		
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         sBuilder.append(req.getUserAttributeCount()).append(spacers);
@@ -482,8 +481,8 @@ public class ProtobufSourceUtils {
         List<UserAttribute> userAttributeList = req.getUserAttributeList();
         if (userAttributeList.isEmpty()) {
 			
-        	sBuilder.append(NULL).append(spacers);
-        	sBuilder.append(NULL).append(spacers);
+        	sBuilder.append(spacers);
+        	sBuilder.append(spacers);
 		} else {
 			
 			StringBuilder userAtrributeIdBuilder = new StringBuilder();
@@ -501,139 +500,228 @@ public class ProtobufSourceUtils {
         
         ProtocolStringList excludedUrls = req.getExcludedClickThroughUrlList();
         if (excludedUrls.isEmpty()) {
-        	sBuilder.append(NULL).append(spacers);
+        	sBuilder.append(spacers);
 		} else {
-			StringBuilder excludedUrlsBuilder = new StringBuilder();
+			
 			for (String string : excludedUrls) {
-				excludedUrlsBuilder.append(string).append(charSpacers);
+				sBuilder.append(string).append(charSpacers);
 			}
-			sBuilder.append(getSubString(excludedUrlsBuilder)).append(spacers);
+			getSubString(sBuilder).append(spacers);
 		}
         
         if (req.hasUrl()) {
 			
         	sBuilder.append(req.getUrl()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (req.hasCategory()) {
 			sBuilder.append(req.getCategory()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (req.hasAdxType()) {
 			sBuilder.append(req.getAdxType()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (req.hasAnonymousId()) {
         	sBuilder.append(req.getAnonymousId()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (req.hasDetectedLanguage()) {
         	sBuilder.append(req.getDetectedLanguage()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (req.hasCategoryVersion()) {
 			sBuilder.append(req.getCategoryVersion()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         List<AdzInfo> adzInfos = req.getAdzinfoList();
-        StringBuilder adzInfoIdBuilder = new StringBuilder();
-        StringBuilder adzInfoPidBuilder = new  StringBuilder();
-        StringBuilder adzInfoSizeBuilder = new StringBuilder();
-        StringBuilder adzInfoAdBidCountBuilder = new StringBuilder();
         StringBuilder adzInfoViewTypeBuilder = new StringBuilder();
         StringBuilder adzInfoExcludedFilterBuilder = new StringBuilder();
-        StringBuilder adzInfoMinCPMPriceBuilder = new StringBuilder();
-        StringBuilder adzInfoViewScreenBuilder = new StringBuilder();
-        StringBuilder adzInfoPageSessionAdIdxbBuilder = new StringBuilder();
+        StringBuilder adzInfoBuilder = new StringBuilder();
+        String[] mergeredValues = new String[8];
+        int adzInfoNum = 0;
         for (AdzInfo adzInfo : adzInfos) {
-			
-        	if (adzInfo.hasId()) {
-				adzInfoIdBuilder.append(adzInfo.getId()).append(charSpacers);
-			}
-        	if (adzInfo.hasPid()) {
-				adzInfoPidBuilder.append(adzInfo.getPid()).append(charSpacers);
-			}
-        	if (adzInfo.hasSize()) {
-				adzInfoSizeBuilder.append(adzInfo.getSize()).append(charSpacers);
-			}
-        	if (adzInfo.hasAdBidCount()) {
-				adzInfoAdBidCountBuilder.append(adzInfo.getAdBidCount()).append(charSpacers);
-			}
-        	
-        	List<Integer> viewTypes = adzInfo.getViewTypeList();
-        	for (Integer integer : viewTypes) {
+			if (adzInfoNum == 0) {
+				if (adzInfo.hasId()) {
+            		adzInfoBuilder.append(adzInfo.getId()).append(spacers);
+				} else {
+					adzInfoBuilder.append(spacers);
+				}
+            	if (adzInfo.hasPid()) {
+            		adzInfoBuilder.append(adzInfo.getPid()).append(spacers);
+				} else {
+					adzInfoBuilder.append(spacers);
+				}
+            	if (adzInfo.hasSize()) {
+            		adzInfoBuilder.append(adzInfo.getSize()).append(spacers);
+				} else {
+					adzInfoBuilder.append(spacers);
+				}
+            	if (adzInfo.hasAdBidCount()) {
+            		adzInfoBuilder.append(adzInfo.getAdBidCount()).append(spacers);
+				} else {
+					adzInfoBuilder.append(spacers);
+				}
+            	
+            	List<Integer> viewTypes = adzInfo.getViewTypeList();
+            	if (viewTypes.isEmpty()) {
+					adzInfoBuilder.append(spacers);
+				} else {
+					for (Integer integer : viewTypes) {
+						
+	            		adzInfoViewTypeBuilder.append(integer).append(charSpacers);
+					}
+					adzInfoBuilder.append(getSubString(adzInfoViewTypeBuilder)).append(spacers);
+				}
+            	
+            	
+            	List<Integer> excludedFilters = adzInfo.getExcludedFilterList();
+            	if (excludedFilters.isEmpty()) {
+            		adzInfoBuilder.append(spacers);
+				} else {
+					for (Integer integer : excludedFilters) {
+						adzInfoExcludedFilterBuilder.append(integer).append(charSpacers);
+					}
+					adzInfoBuilder.append(getSubString(adzInfoExcludedFilterBuilder)).append(spacers);
+				}
+            	
+            	
+            	if (adzInfo.hasMinCpmPrice()) {
+					
+            		adzInfoBuilder.append(adzInfo.getMinCpmPrice()).append(spacers);
+				} else {
+					adzInfoBuilder.append(spacers);
+				}
+            	
+            	
+            	if (adzInfo.hasViewScreen()) {
+            		adzInfoBuilder.append(adzInfo.getViewScreen().name()).append(spacers);
+				} else {
+					adzInfoBuilder.append(spacers);
+				}
+            	
+            	if (adzInfo.hasPageSessionAdIdx()) {
+            		adzInfoBuilder.append(adzInfo.getPageSessionAdIdx()).append(spacers);
+				} else {
+					adzInfoBuilder.append(spacers);
+				}
+			} else {
 				
-        		adzInfoViewTypeBuilder.append(integer).append(charSpacers);
+				String[] values = adzInfoBuilder.toString().split("\\|");
+				if (adzInfo.hasId()) {
+					mergeredValues[0] = values[0] + charSpacers + adzInfo.getId();
+				} else {
+					mergeredValues[0] = values[0] + charSpacers;
+				}
+            	if (adzInfo.hasPid()) {
+            		mergeredValues[1] = values[1] + charSpacers + adzInfo.getPid();
+				} else {
+					mergeredValues[1] = values[1] + charSpacers;
+				}
+            	if (adzInfo.hasSize()) {
+            		mergeredValues[2] = values[2] + charSpacers + adzInfo.getSize();
+				} else {
+					mergeredValues[2] = values[2] + charSpacers;
+				}
+            	if (adzInfo.hasAdBidCount()) {
+            		mergeredValues[3] = values[3] + charSpacers + adzInfo.getAdBidCount();
+				} else {
+					mergeredValues[3] = values[3] + charSpacers;
+				}
+            	
+            	List<Integer> viewTypes = adzInfo.getViewTypeList();
+            	if (viewTypes.isEmpty()) {
+            		mergeredValues[4] = values[4] + charSpacers;
+				} else {
+					for (Integer integer : viewTypes) {
+						
+	            		adzInfoViewTypeBuilder.append(integer).append(charSpacers);
+					}
+					mergeredValues[4] = values[4] + charSpacers + getSubString(adzInfoViewTypeBuilder).toString();
+				}
+            	
+            	
+            	List<Integer> excludedFilters = adzInfo.getExcludedFilterList();
+            	if (excludedFilters.isEmpty()) {
+            		mergeredValues[5] = values[5] + charSpacers;
+				} else {
+					for (Integer integer1 : excludedFilters) {
+						adzInfoExcludedFilterBuilder.append(integer1).append(charSpacers);
+					}
+					mergeredValues[5] = values[5] + charSpacers + getSubString(adzInfoExcludedFilterBuilder).toString();
+				}
+            	
+            	
+            	if (adzInfo.hasMinCpmPrice()) {
+					
+            		mergeredValues[6] = values[6] + charSpacers + adzInfo.getMinCpmPrice();
+				} else {
+					mergeredValues[6] = values[6] + charSpacers;
+				}
+            	
+            	
+            	if (adzInfo.hasViewScreen()) {
+            		mergeredValues[7] = values[7] + charSpacers + adzInfo.getViewScreen().name();
+				} else {
+					mergeredValues[7] = values[7] + charSpacers;
+				}
+            	
+            	if (adzInfo.hasPageSessionAdIdx()) {
+            		mergeredValues[8] = values[8] + charSpacers + adzInfo.getPageSessionAdIdx();
+				} else {
+					mergeredValues[8] = values[8] + charSpacers;
+				}
 			}
         	
-        	List<Integer> excludedFilters = adzInfo.getExcludedFilterList();
-        	for (Integer integer1 : excludedFilters) {
-				adzInfoExcludedFilterBuilder.append(integer1).append(charSpacers);
-			}
-        	
-        	if (adzInfo.hasMinCpmPrice()) {
-				
-        		adzInfoMinCPMPriceBuilder.append(adzInfo.getMinCpmPrice()).append(charSpacers);
-			}
-        	
-        	
-        	if (adzInfo.hasViewScreen()) {
-				adzInfoViewScreenBuilder.append(adzInfo.getViewScreen().name()).append(charSpacers);
-			}
-        	
-        	if (adzInfo.hasPageSessionAdIdx()) {
-				adzInfoPageSessionAdIdxbBuilder.append(adzInfo.getPageSessionAdIdx()).append(charSpacers);
-			}
+        	adzInfoNum++;
 		}
         
-        sBuilder.append(getSubString(adzInfoIdBuilder)).append(spacers);
-        sBuilder.append(getSubString(adzInfoPidBuilder)).append(spacers);
-        sBuilder.append(getSubString(adzInfoSizeBuilder)).append(spacers);
-        sBuilder.append(getSubString(adzInfoAdBidCountBuilder)).append(spacers);
-        sBuilder.append(getSubString(adzInfoViewTypeBuilder)).append(spacers);
-        sBuilder.append(getSubString(adzInfoExcludedFilterBuilder)).append(spacers);
-        sBuilder.append(getSubString(adzInfoMinCPMPriceBuilder)).append(spacers);
-        sBuilder.append(getSubString(adzInfoViewScreenBuilder)).append(spacers);
+        if (adzInfos.size() > 1) {
+            adzInfoBuilder.delete(0, adzInfoBuilder.length());
+            for (int j = 0; j < mergeredValues.length -1; j++) {
+				
+            	adzInfoBuilder.append(mergeredValues[j]).append(spacers);
+			}
+		}
+        sBuilder.append(getSubString(adzInfoBuilder)).append(spacers);
         if (req.hasPageSessionId()) {
 			sBuilder.append(req.getPageSessionId()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
-        sBuilder.append(getSubString(adzInfoPageSessionAdIdxbBuilder)).append(spacers);
         
         List<Integer> excludedSensitiveCategorys = req.getExcludedSensitiveCategoryList();
-        StringBuilder excludedSensitiveBuilder = new StringBuilder();
+        
         if (excludedSensitiveCategorys.isEmpty()) {
-        	sBuilder.append(NULL).append(spacers);
+        	sBuilder.append(spacers);
 		} else {
 			for (Integer integer : excludedSensitiveCategorys) {
-				excludedSensitiveBuilder.append(integer).append(charSpacers);
+				sBuilder.append(integer).append(charSpacers);
 			}
-			sBuilder.append(getSubString(excludedSensitiveBuilder)).append(spacers);
+			sBuilder.append(getSubString(sBuilder)).append(spacers);
 		}
         
         List<Integer> excludedAdCategorys = req.getExcludedAdCategoryList();
-        StringBuilder excludedAdCategorysBuilder = new StringBuilder();
         if (excludedAdCategorys.isEmpty()) {
-        	sBuilder.append(NULL).append(spacers);
+        	sBuilder.append(spacers);
 		} else {
 			for (Integer integer : excludedAdCategorys) {
-				excludedAdCategorysBuilder.append(integer).append(charSpacers);
+				sBuilder.append(integer).append(charSpacers);
 			}
-			sBuilder.append(getSubString(excludedAdCategorysBuilder)).append(spacers);
+			sBuilder.append(getSubString(sBuilder)).append(spacers);
 		}
         
         sBuilder.append(req.getContentCategoriesCount()).append(spacers);
@@ -642,20 +730,20 @@ public class ProtobufSourceUtils {
         StringBuilder contentCategoryIdBuilder = new StringBuilder();
         StringBuilder contentCategoryConfidenceLevelBuilder = new StringBuilder();
         if (contentCategories.isEmpty()) {
-			sBuilder.append(NULL).append(spacers);
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
+			sBuilder.append(spacers);
 		} else {
 			for (ContentCategory contentCategory : contentCategories) {
             	
             	if (contentCategory.hasId()) {
 					contentCategoryIdBuilder.append(contentCategory.getId()).append(charSpacers);
 				} else {
-					contentCategoryIdBuilder.append(NULL).append(charSpacers);
+					contentCategoryIdBuilder.append(charSpacers);
 				}
             	if (contentCategory.hasConfidenceLevel()) {
 					contentCategoryConfidenceLevelBuilder.append(contentCategory.getConfidenceLevel()).append(charSpacers);
 				} else {
-					contentCategoryIdBuilder.append(NULL).append(charSpacers);
+					contentCategoryIdBuilder.append(charSpacers);
 				}
 			}
 			sBuilder.append(getSubString(contentCategoryIdBuilder)).append(spacers);
@@ -667,18 +755,18 @@ public class ProtobufSourceUtils {
         if (mobile.hasIsApp()) {
 			sBuilder.append(mobile.getIsApp()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (mobile.hasAdNum()) {
 			sBuilder.append(mobile.getAdNum()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         ProtocolStringList mobileAdKeywords = mobile.getAdKeywordList();
         if (mobileAdKeywords.isEmpty()) {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		} else {
 			StringBuilder adKeywordsBuilder = new StringBuilder();
 			for (String string : mobileAdKeywords) {
@@ -690,80 +778,80 @@ public class ProtobufSourceUtils {
         if (mobile.hasPackageName()) {
 			sBuilder.append(mobile.getPackageName()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         Device device = mobile.getDevice();
         if (device.hasPlatform()) {
 			sBuilder.append(device.getPlatform()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (device.hasBrand()) {
 			sBuilder.append(device.getBrand()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (device.hasModel()) {
 			sBuilder.append(device.getModel()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (device.hasOs()) {
 			sBuilder.append(device.getOs()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (device.hasOsVersion()) {
 			sBuilder.append(device.getOsVersion()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
        
         if (device.hasNetwork()) {
 			sBuilder.append(device.getNetwork()).append(spacers); 
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (device.hasOperator()) {
 			sBuilder.append(device.getOperator()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (device.hasLongitude()) {
 			sBuilder.append(device.getLongitude()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (device.hasLatitude()) {
 			sBuilder.append(device.getLatitude()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (device.hasDeviceSize()) {
         	sBuilder.append(device.getDeviceSize()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (device.hasDevicePixelRatio()) {
 			sBuilder.append(device.getDevicePixelRatio()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
         
         if (device.hasDeviceId()) {
 			sBuilder.append(device.getDeviceId()).append(spacers);
 		} else {
-			sBuilder.append(NULL).append(spacers);
+			sBuilder.append(spacers);
 		}
        
         if (logger.isDebugEnabled()) {
@@ -775,7 +863,7 @@ public class ProtobufSourceUtils {
      			logger.debug("debug info exception is " + e.toString());
      		}
 		}
-        byte[] body = sBuilder.toString().getBytes();
+//        byte[] body = sBuilder.toString().getBytes();
         logger.info("call eventBuilder");
         logger.info(sBuilder.toString());
 		return EventBuilder.withBody(sBuilder.toString(), Charset.defaultCharset());

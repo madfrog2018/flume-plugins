@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.Set;
 
 import org.apache.commons.collections.list.UnmodifiableList;
 import org.apache.commons.io.HexDump;
+import org.apache.commons.lang.Validate;
 import org.apache.log4j.Logger;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
@@ -36,96 +38,87 @@ public class SocketData {
 	
 	public static void main(String[] args) {
 		System.out.println(new Date());
+		int count = 1;
         try {
-        	for (int i = 0; i < 10000; i++) {
-            Socket socket = new Socket("192.168.2.7", 5140);
-            TanxBidding.BidRequest.Builder builder = TanxBidding.BidRequest.newBuilder();
-            TanxBidding.BidRequest.AdzInfo.Builder AdzInfoOrBuilder = TanxBidding.BidRequest.AdzInfo.newBuilder();
-            TanxBidding.BidRequest.UserAttribute.Builder userBuilder = TanxBidding.BidRequest.UserAttribute.newBuilder();
-            TanxBidding.BidRequest.ContentCategory.Builder contentBuilder = TanxBidding.BidRequest.ContentCategory.newBuilder();
-            builder.setBid("0a67f524000054813cfc6d8e0015ad64");
-            builder.setVersion(3);
-            AdzInfoOrBuilder.setId(1);
-            AdzInfoOrBuilder.setPid("mm_45015339_4154953_22394227");
-            userBuilder.setId(1);
-            contentBuilder.setId(1);
-            contentBuilder.setConfidenceLevel(12);
-            AdzInfoOrBuilder.build();
-            userBuilder.build();
-            contentBuilder.build();
-            builder.addAdzinfo(AdzInfoOrBuilder.build());
-            builder.addUserAttribute(userBuilder.build());
-            builder.addContentCategories(contentBuilder.build());
-            TanxBidding.BidRequest request = builder.build();
-            TanxBidding.BidRequest req1 = TanxBidding.BidRequest.parseFrom(request.toByteArray());
-            System.out.println("bid is " + req1.getBid());
-            List<AdzInfo> ad = req1.getAdzinfoList();
-            System.out.println("pid is " + req1.getAdzinfoList());
-            HexDump.dump(request.toByteArray(), 0, System.out, 0);
-            OutputStream out = socket.getOutputStream();
-//	        out.write(request.toByteArray());
+        	for (int i = 0; i < 5000; i++) {
+        	
+        		Socket socket = new Socket("192.168.2.7", 5140);
+//            TanxBidding.BidRequest.Builder builder = TanxBidding.BidRequest.newBuilder();
+//            TanxBidding.BidRequest.AdzInfo.Builder AdzInfoOrBuilder = TanxBidding.BidRequest.AdzInfo.newBuilder();
+//            TanxBidding.BidRequest.UserAttribute.Builder userBuilder = TanxBidding.BidRequest.UserAttribute.newBuilder();
+//            TanxBidding.BidRequest.ContentCategory.Builder contentBuilder = TanxBidding.BidRequest.ContentCategory.newBuilder();
+//            builder.setBid("0a67f524000054813cfc6d8e0015ad64");
+//            builder.setVersion(3);
+//            AdzInfoOrBuilder.setId(1);
+//            AdzInfoOrBuilder.setPid("mm_45015339_4154953_22394227");
+//            userBuilder.setId(1);
+//            contentBuilder.setId(1);
+//            contentBuilder.setConfidenceLevel(12);
+//            AdzInfoOrBuilder.build();
+//            userBuilder.build();
+//            contentBuilder.build();
+//            builder.addAdzinfo(AdzInfoOrBuilder.build());
+//            builder.addUserAttribute(userBuilder.build());
+//            builder.addContentCategories(contentBuilder.build());
+//            TanxBidding.BidRequest request = builder.build();
+//            TanxBidding.BidRequest req1 = TanxBidding.BidRequest.parseFrom(request.toByteArray());
+//            System.out.println("bid is " + req1.getBid());
+//            List<AdzInfo> ad = req1.getAdzinfoList();
+//            System.out.println("pid is " + req1.getAdzinfoList());
+//            HexDump.dump(request.toByteArray(), 0, System.out, 0);
             File file = new File("D:\\git\\flume-plugins\\flume-ng-protobuf\\src\\main\\resources\\tess.txt");
             @SuppressWarnings("resource")
 			FileInputStream inputStream = new FileInputStream(file);
             byte[] result = new byte[inputStream.available()];
             inputStream.read(result);
-//            Descriptor des = BidRequest.getDescriptor();
-//            List<FieldDescriptor> fieldLists = des.getFields();
-//            for (FieldDescriptor fieldList : fieldLists) {
-//				if (fieldList.getJavaType() != JavaType.MESSAGE) {
-//					logger.info(fieldList.getName());
-//				}
-//			}
-            
             String spacers = "|";
-            Character charSpacers = new Character((char) 0x01);
+            Character charSpacers = new Character((char)0x01);
             TanxBidding.BidRequest req = TanxBidding.BidRequest.parseFrom(result);
             StringBuilder sBuilder = new StringBuilder();
-            String NULL = "NULL";
-            sBuilder.append(req.getVersion()).append("|");
-            sBuilder.append(req.getBid()).append("|");
+            sBuilder.append(req.getVersion()).append(spacers);
+            sBuilder.append(req.getBid()).append(spacers);
             
             if (req.hasIsTest()) {
-            	sBuilder.append(req.getIsTest()).append("|");
+            	sBuilder.append(req.getIsTest()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (req.hasIsPing()) {
-            	sBuilder.append(req.getIsPing()).append("|");
+            	sBuilder.append(req.getIsPing()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (req.hasTid()) {
-            	sBuilder.append(req.getTid()).append("|");
+            	sBuilder.append(req.getTid()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (req.hasIp()) {
-				sBuilder.append(req.getIp()).append("|");
+				sBuilder.append(req.getIp()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (req.hasUserAgent()) {
 				
-            	sBuilder.append(req.getUserAgent()).append("|");
+            	sBuilder.append(req.getUserAgent()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (req.hasTimezoneOffset()) {
             	
-            	sBuilder.append(req.getTimezoneOffset()).append("|");
+            	sBuilder.append(req.getTimezoneOffset()).append(spacers);
             } else {
-            	sBuilder.append(NULL).append("|");
+            	sBuilder.append(spacers);
             }
             
             List<Integer> userVertical = req.getUserVerticalList();
             if (userVertical.isEmpty()) {
-            	sBuilder.append(NULL).append(spacers);
+            	sBuilder.append(spacers);
     		} else {
     			for (Integer integer : userVertical) {
     				sBuilder.append(integer).append(charSpacers);
@@ -134,28 +127,28 @@ public class SocketData {
     		}
             
             if (req.hasTidVersion()) {
-            	sBuilder.append(req.getTidVersion()).append("|");
+            	sBuilder.append(req.getTidVersion()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             
-            sBuilder.append(req.getPrivateInfoCount()).append("|");
+            sBuilder.append(req.getPrivateInfoCount()).append(spacers);
             
             if (req.hasHostedMatchData()) {
-				sBuilder.append(req.getHostedMatchData()).append("|");
+				sBuilder.append(req.getHostedMatchData()).append(spacers);
 			
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
-            sBuilder.append(req.getUserAttributeCount()).append("|");
+            sBuilder.append(req.getUserAttributeCount()).append(spacers);
             
             List<UserAttribute> userAttributeList = req.getUserAttributeList();
             if (userAttributeList.isEmpty()) {
     			
-            	sBuilder.append(NULL).append(spacers);
-            	sBuilder.append(NULL).append(spacers);
+            	sBuilder.append(spacers);
+            	sBuilder.append(spacers);
     		} else {
     			
     			StringBuilder userAtrributeIdBuilder = new StringBuilder();
@@ -173,319 +166,370 @@ public class SocketData {
             
             ProtocolStringList excludedUrls = req.getExcludedClickThroughUrlList();
             if (excludedUrls.isEmpty()) {
-            	sBuilder.append(NULL).append("|");
+            	sBuilder.append(spacers);
 			} else {
-				StringBuilder excludedUrlsBuilder = new StringBuilder();
+				
 				for (String string : excludedUrls) {
-					excludedUrlsBuilder.append(string).append(new Character((char)0x01));
+					sBuilder.append(string).append(charSpacers);
 				}
-				sBuilder.append(getSubString(excludedUrlsBuilder)).append("|");
+				getSubString(sBuilder).append(spacers);
 			}
             
             if (req.hasUrl()) {
 				
-            	sBuilder.append(req.getUrl()).append("|");
+            	sBuilder.append(req.getUrl()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (req.hasCategory()) {
-				sBuilder.append(req.getCategory()).append("|");
+				sBuilder.append(req.getCategory()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (req.hasAdxType()) {
-				sBuilder.append(req.getAdxType()).append("|");
+				sBuilder.append(req.getAdxType()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (req.hasAnonymousId()) {
-            	sBuilder.append(req.getAnonymousId()).append("|");
+            	sBuilder.append(req.getAnonymousId()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (req.hasDetectedLanguage()) {
-            	sBuilder.append(req.getDetectedLanguage()).append("|");
+            	sBuilder.append(req.getDetectedLanguage()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (req.hasCategoryVersion()) {
-				sBuilder.append(req.getCategoryVersion()).append("|");
+				sBuilder.append(req.getCategoryVersion()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             List<AdzInfo> adzInfos = req.getAdzinfoList();
-            StringBuilder adzInfoIdBuilder = new StringBuilder();
-            StringBuilder adzInfoPidBuilder = new  StringBuilder();
-            StringBuilder adzInfoSizeBuilder = new StringBuilder();
-            StringBuilder adzInfoAdBidCountBuilder = new StringBuilder();
             StringBuilder adzInfoViewTypeBuilder = new StringBuilder();
             StringBuilder adzInfoExcludedFilterBuilder = new StringBuilder();
-            StringBuilder adzInfoMinCPMPriceBuilder = new StringBuilder();
-            StringBuilder adzInfoViewScreenBuilder = new StringBuilder();
-            StringBuilder adzInfoPageSessionAdIdxbBuilder = new StringBuilder();
+            StringBuilder adzInfoBuilder = new StringBuilder();
+            String[] mergeredValues = new String[8];
+            int adzInfoNum = 0;
             for (AdzInfo adzInfo : adzInfos) {
-				
-            	if (adzInfo.hasId()) {
-					adzInfoIdBuilder.append(adzInfo.getId()).append(new Character((char)0x01));
-				}
-            	if (adzInfo.hasPid()) {
-					adzInfoPidBuilder.append(adzInfo.getPid()).append(new Character((char)0x01));
-				}
-            	if (adzInfo.hasSize()) {
-					adzInfoSizeBuilder.append(adzInfo.getSize()).append(new Character((char)0x01));
-				}
-            	if (adzInfo.hasAdBidCount()) {
-					adzInfoAdBidCountBuilder.append(adzInfo.getAdBidCount()).append(new Character((char)0x01));
-				}
-            	
-            	List<Integer> viewTypes = adzInfo.getViewTypeList();
-            	for (Integer integer : viewTypes) {
+				if (adzInfoNum == 0) {
+					if (adzInfo.hasId()) {
+	            		adzInfoBuilder.append(adzInfo.getId()).append(spacers);
+					} else {
+						adzInfoBuilder.append(spacers);
+					}
+	            	if (adzInfo.hasPid()) {
+	            		adzInfoBuilder.append(adzInfo.getPid()).append(spacers);
+					} else {
+						adzInfoBuilder.append(spacers);
+					}
+	            	if (adzInfo.hasSize()) {
+	            		adzInfoBuilder.append(adzInfo.getSize()).append(spacers);
+					} else {
+						adzInfoBuilder.append(spacers);
+					}
+	            	if (adzInfo.hasAdBidCount()) {
+	            		adzInfoBuilder.append(adzInfo.getAdBidCount()).append(spacers);
+					} else {
+						adzInfoBuilder.append(spacers);
+					}
+	            	
+	            	List<Integer> viewTypes = adzInfo.getViewTypeList();
+	            	if (viewTypes.isEmpty()) {
+						adzInfoBuilder.append(spacers);
+					} else {
+						for (Integer integer : viewTypes) {
+							
+		            		adzInfoViewTypeBuilder.append(integer).append(charSpacers);
+						}
+						adzInfoBuilder.append(getSubString(adzInfoViewTypeBuilder)).append(spacers);
+					}
+	            	
+	            	
+	            	List<Integer> excludedFilters = adzInfo.getExcludedFilterList();
+	            	if (excludedFilters.isEmpty()) {
+	            		adzInfoBuilder.append(spacers);
+					} else {
+						for (Integer integer : excludedFilters) {
+							adzInfoExcludedFilterBuilder.append(integer).append(charSpacers);
+						}
+						adzInfoBuilder.append(getSubString(adzInfoExcludedFilterBuilder)).append(spacers);
+					}
+	            	
+	            	
+	            	if (adzInfo.hasMinCpmPrice()) {
+						
+	            		adzInfoBuilder.append(adzInfo.getMinCpmPrice()).append(spacers);
+					} else {
+						adzInfoBuilder.append(spacers);
+					}
+	            	
+	            	
+	            	if (adzInfo.hasViewScreen()) {
+	            		adzInfoBuilder.append(adzInfo.getViewScreen().name()).append(spacers);
+					} else {
+						adzInfoBuilder.append(spacers);
+					}
+	            	
+	            	if (adzInfo.hasPageSessionAdIdx()) {
+	            		adzInfoBuilder.append(adzInfo.getPageSessionAdIdx()).append(spacers);
+					} else {
+						adzInfoBuilder.append(spacers);
+					}
+				} else {
 					
-            		adzInfoViewTypeBuilder.append(integer).append(new Character((char)0x01));
+					String[] values = adzInfoBuilder.toString().split("\\|");
+					if (adzInfo.hasId()) {
+						mergeredValues[0] = values[0] + charSpacers + adzInfo.getId();
+					} else {
+						mergeredValues[0] = values[0] + charSpacers;
+					}
+	            	if (adzInfo.hasPid()) {
+	            		mergeredValues[1] = values[1] + charSpacers + adzInfo.getPid();
+					} else {
+						mergeredValues[1] = values[1] + charSpacers;
+					}
+	            	if (adzInfo.hasSize()) {
+	            		mergeredValues[2] = values[2] + charSpacers + adzInfo.getSize();
+					} else {
+						mergeredValues[2] = values[2] + charSpacers;
+					}
+	            	if (adzInfo.hasAdBidCount()) {
+	            		mergeredValues[3] = values[3] + charSpacers + adzInfo.getAdBidCount();
+					} else {
+						mergeredValues[3] = values[3] + charSpacers;
+					}
+	            	
+	            	List<Integer> viewTypes = adzInfo.getViewTypeList();
+	            	if (viewTypes.isEmpty()) {
+	            		mergeredValues[4] = values[4] + charSpacers;
+					} else {
+						for (Integer integer : viewTypes) {
+							
+		            		adzInfoViewTypeBuilder.append(integer).append(charSpacers);
+						}
+						mergeredValues[4] = values[4] + charSpacers + getSubString(adzInfoViewTypeBuilder).toString();
+					}
+	            	
+	            	
+	            	List<Integer> excludedFilters = adzInfo.getExcludedFilterList();
+	            	if (excludedFilters.isEmpty()) {
+	            		mergeredValues[5] = values[5] + charSpacers;
+					} else {
+						for (Integer integer1 : excludedFilters) {
+							adzInfoExcludedFilterBuilder.append(integer1).append(charSpacers);
+						}
+						mergeredValues[5] = values[5] + charSpacers + getSubString(adzInfoExcludedFilterBuilder).toString();
+					}
+	            	
+	            	
+	            	if (adzInfo.hasMinCpmPrice()) {
+						
+	            		mergeredValues[6] = values[6] + charSpacers + adzInfo.getMinCpmPrice();
+					} else {
+						mergeredValues[6] = values[6] + charSpacers;
+					}
+	            	
+	            	
+	            	if (adzInfo.hasViewScreen()) {
+	            		mergeredValues[7] = values[7] + charSpacers + adzInfo.getViewScreen().name();
+					} else {
+						mergeredValues[7] = values[7] + charSpacers;
+					}
+	            	
+	            	if (adzInfo.hasPageSessionAdIdx()) {
+	            		mergeredValues[8] = values[8] + charSpacers + adzInfo.getPageSessionAdIdx();
+					} else {
+						mergeredValues[8] = values[8] + charSpacers;
+					}
 				}
             	
-            	List<Integer> excludedFilters = adzInfo.getExcludedFilterList();
-            	for (Integer integer1 : excludedFilters) {
-					adzInfoExcludedFilterBuilder.append(integer1).append(new Character((char)0x01));
-				}
-            	
-            	if (adzInfo.hasMinCpmPrice()) {
-					
-            		adzInfoMinCPMPriceBuilder.append(adzInfo.getMinCpmPrice()).append(new Character((char)0x01));
-				}
-            	
-            	
-            	if (adzInfo.hasViewScreen()) {
-					adzInfoViewScreenBuilder.append(adzInfo.getViewScreen().name()).append(new Character((char)0x01));
-				}
-            	
-            	if (adzInfo.hasPageSessionAdIdx()) {
-					adzInfoPageSessionAdIdxbBuilder.append(adzInfo.getPageSessionAdIdx()).append(new Character((char)0x01));
-				}
+            	adzInfoNum++;
 			}
             
-            sBuilder.append(getSubString(adzInfoIdBuilder)).append("|");
-            sBuilder.append(getSubString(adzInfoPidBuilder)).append("|");
-            sBuilder.append(getSubString(adzInfoSizeBuilder)).append("|");
-            sBuilder.append(getSubString(adzInfoAdBidCountBuilder)).append("|");
-            sBuilder.append(getSubString(adzInfoViewTypeBuilder)).append("|");
-            sBuilder.append(getSubString(adzInfoExcludedFilterBuilder)).append("|");
-            sBuilder.append(getSubString(adzInfoMinCPMPriceBuilder)).append("|");
-            sBuilder.append(getSubString(adzInfoViewScreenBuilder)).append("|");
+            if (adzInfos.size() > 1) {
+                adzInfoBuilder.delete(0, adzInfoBuilder.length());
+                for (int j = 0; j < mergeredValues.length -1; j++) {
+    				
+                	adzInfoBuilder.append(mergeredValues[j]).append(spacers);
+    			}
+			}
+            sBuilder.append(getSubString(adzInfoBuilder)).append(spacers);
             if (req.hasPageSessionId()) {
-				sBuilder.append(req.getPageSessionId()).append("|");
+				sBuilder.append(req.getPageSessionId()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
-            sBuilder.append(getSubString(adzInfoPageSessionAdIdxbBuilder)).append("|");
             
             List<Integer> excludedSensitiveCategorys = req.getExcludedSensitiveCategoryList();
-            StringBuilder excludedSensitiveBuilder = new StringBuilder();
+            
             if (excludedSensitiveCategorys.isEmpty()) {
-            	sBuilder.append(NULL).append("|");
+            	sBuilder.append(spacers);
 			} else {
 				for (Integer integer : excludedSensitiveCategorys) {
-					excludedSensitiveBuilder.append(integer).append(new Character((char)0x01));
+					sBuilder.append(integer).append(charSpacers);
 				}
-				sBuilder.append(getSubString(excludedSensitiveBuilder)).append("|");
+				sBuilder.append(getSubString(sBuilder)).append(spacers);
 			}
             
             List<Integer> excludedAdCategorys = req.getExcludedAdCategoryList();
-            StringBuilder excludedAdCategorysBuilder = new StringBuilder();
             if (excludedAdCategorys.isEmpty()) {
-            	sBuilder.append(NULL).append("|");
+            	sBuilder.append(spacers);
 			} else {
 				for (Integer integer : excludedAdCategorys) {
-					excludedAdCategorysBuilder.append(integer).append(new Character((char)0x01));
+					sBuilder.append(integer).append(charSpacers);
 				}
-				sBuilder.append(getSubString(excludedAdCategorysBuilder)).append("|");
+				sBuilder.append(getSubString(sBuilder)).append(spacers);
 			}
             
-            sBuilder.append(req.getContentCategoriesCount()).append("|");
+            sBuilder.append(req.getContentCategoriesCount()).append(spacers);
             
             List<ContentCategory> contentCategories = req.getContentCategoriesList();
             StringBuilder contentCategoryIdBuilder = new StringBuilder();
             StringBuilder contentCategoryConfidenceLevelBuilder = new StringBuilder();
             if (contentCategories.isEmpty()) {
-				sBuilder.append(NULL).append("|");
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
+				sBuilder.append(spacers);
 			} else {
 				for (ContentCategory contentCategory : contentCategories) {
 	            	
 	            	if (contentCategory.hasId()) {
-						contentCategoryIdBuilder.append(contentCategory.getId()).append(new Character((char)0x01));
+						contentCategoryIdBuilder.append(contentCategory.getId()).append(charSpacers);
 					} else {
-						contentCategoryIdBuilder.append(NULL).append(new Character((char)0x01));
+						contentCategoryIdBuilder.append(charSpacers);
 					}
 	            	if (contentCategory.hasConfidenceLevel()) {
-						contentCategoryConfidenceLevelBuilder.append(contentCategory.getConfidenceLevel()).append(new Character((char)0x01));
+						contentCategoryConfidenceLevelBuilder.append(contentCategory.getConfidenceLevel()).append(charSpacers);
 					} else {
-						contentCategoryIdBuilder.append(NULL).append(new Character((char)0x01));
+						contentCategoryIdBuilder.append(charSpacers);
 					}
 				}
-				sBuilder.append(getSubString(contentCategoryIdBuilder)).append("|");
-				sBuilder.append(getSubString(contentCategoryConfidenceLevelBuilder)).append("|");
+				sBuilder.append(getSubString(contentCategoryIdBuilder)).append(spacers);
+				sBuilder.append(getSubString(contentCategoryConfidenceLevelBuilder)).append(spacers);
 			}
             
             //获取移动设备的信息
             Mobile mobile = req.getMobile();
             if (mobile.hasIsApp()) {
-				sBuilder.append(mobile.getIsApp()).append("|");
+				sBuilder.append(mobile.getIsApp()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (mobile.hasAdNum()) {
-				sBuilder.append(mobile.getAdNum()).append("|");
+				sBuilder.append(mobile.getAdNum()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             ProtocolStringList mobileAdKeywords = mobile.getAdKeywordList();
             if (mobileAdKeywords.isEmpty()) {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			} else {
 				StringBuilder adKeywordsBuilder = new StringBuilder();
 				for (String string : mobileAdKeywords) {
-					adKeywordsBuilder.append(string).append(new Character((char)0x01));
+					adKeywordsBuilder.append(string).append(charSpacers);
 				}
-				sBuilder.append(getSubString(adKeywordsBuilder)).append("|");
+				sBuilder.append(getSubString(adKeywordsBuilder)).append(spacers);
 			}
             
             if (mobile.hasPackageName()) {
-				sBuilder.append(mobile.getPackageName()).append("|");
+				sBuilder.append(mobile.getPackageName()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             Device device = mobile.getDevice();
             if (device.hasPlatform()) {
-				sBuilder.append(device.getPlatform()).append("|");
+				sBuilder.append(device.getPlatform()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (device.hasBrand()) {
-				sBuilder.append(device.getBrand()).append("|");
+				sBuilder.append(device.getBrand()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (device.hasModel()) {
-				sBuilder.append(device.getModel()).append("|");
+				sBuilder.append(device.getModel()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (device.hasOs()) {
-				sBuilder.append(device.getOs()).append("|");
+				sBuilder.append(device.getOs()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (device.hasOsVersion()) {
-				sBuilder.append(device.getOsVersion()).append("|");
+				sBuilder.append(device.getOsVersion()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
            
             if (device.hasNetwork()) {
-				sBuilder.append(device.getNetwork()).append("|"); 
+				sBuilder.append(device.getNetwork()).append(spacers); 
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (device.hasOperator()) {
-				sBuilder.append(device.getOperator()).append("|");
+				sBuilder.append(device.getOperator()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (device.hasLongitude()) {
-				sBuilder.append(device.getLongitude()).append("|");
+				sBuilder.append(device.getLongitude()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (device.hasLatitude()) {
-				sBuilder.append(device.getLatitude()).append("|");
+				sBuilder.append(device.getLatitude()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (device.hasDeviceSize()) {
-            	sBuilder.append(device.getDeviceSize()).append("|");
+            	sBuilder.append(device.getDeviceSize()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (device.hasDevicePixelRatio()) {
-				sBuilder.append(device.getDevicePixelRatio()).append("|");
+				sBuilder.append(device.getDevicePixelRatio()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
             
             if (device.hasDeviceId()) {
-				sBuilder.append(device.getDeviceId()).append("|");
+				sBuilder.append(device.getDeviceId()).append(spacers);
 			} else {
-				sBuilder.append(NULL).append("|");
+				sBuilder.append(spacers);
 			}
            
             System.out.println(sBuilder.toString());
             System.out.println(sBuilder.toString().getBytes());
             HexDump.dump(sBuilder.toString().getBytes(), 0, System.out, 0);
-            Map<String, String> map = new HashMap<String, String>();
-            Map<FieldDescriptor, Object> fields = req.getAllFields();
-            Set<FieldDescriptor> fieldDescriptors = fields.keySet();
-            for (FieldDescriptor fieldDescriptor : fieldDescriptors) {
-            	if (fieldDescriptor.getJavaType() == JavaType.INT) {
-            		if (fields.get(fieldDescriptor) instanceof Integer) {
-            			map.put(fieldDescriptor.getName(), String.valueOf(fields.get(fieldDescriptor)));
-					} else if (fields.get(fieldDescriptor) instanceof UnmodifiableList) {
-						List<Integer> integers = (List<Integer>) fields.get(fieldDescriptor);
-						StringBuilder integerStringBuilder = new StringBuilder();
-						for (Integer integer : integers) {
-							integerStringBuilder.append(String.valueOf(integer));
-							integerStringBuilder.append(new Character((char) 0x01));
-						}
-					} else {
-						logger.info("is JavaType.INT not Integer");
-					}
-				}else if (fieldDescriptor.getJavaType() == JavaType.STRING) {
-					if (fields.get(fieldDescriptor) instanceof UnmodifiableLazyStringList) {
-						
-						List<String> strings = (List<String>) fields.get(fieldDescriptor);
-						StringBuilder fieldStringBuilder = new StringBuilder();
-						for (String string : strings) {
-							fieldStringBuilder.append(string);
-							fieldStringBuilder.append(new Character((char) 0x01));
-						}
-						map.put(fieldDescriptor.getName(), fieldStringBuilder.toString());
-					} else {
-						String fieldValue = (String)fields.get(fieldDescriptor);
-						map.put(fieldDescriptor.getName(), fieldValue.substring(0, fieldValue.length()-2));
-					}
-					
-				}
-					
+            OutputStream out = socket.getOutputStream();
+            out.write(result);
+            socket.close();
+            count++;
 			}
-
-//			}
-//            OutputStream out1 = socket.getOutputStream();
-            
-            	out.write(result);
-            	socket.close();
-			}
-//            out.write(result);
         	System.out.println(new Date());
-
+        	System.out.println(count);
         } catch (IOException e) {
             logger.error("error is " + e.toString());
         }

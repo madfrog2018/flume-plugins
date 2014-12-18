@@ -15,7 +15,6 @@ import java.util.Set;
 
 import org.apache.commons.collections.list.UnmodifiableList;
 import org.apache.commons.io.HexDump;
-import org.apache.commons.lang.Validate;
 import org.apache.log4j.Logger;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
@@ -27,6 +26,12 @@ import com.pxene.protobuf.TanxBidding.BidRequest.ContentCategory;
 import com.pxene.protobuf.TanxBidding.BidRequest.Mobile;
 import com.pxene.protobuf.TanxBidding.BidRequest.Mobile.Device;
 import com.pxene.protobuf.TanxBidding.BidRequest.UserAttribute;
+import com.pxene.protobuf.TanxBidding.BidRequest.Video;
+import com.pxene.protobuf.TanxBidding.BidRequest.Video.Content;
+import com.pxene.protobuf.TanxBidding.BidRequest.Video.VideoFormat;
+import com.pxene.protobuf.TanxBidding.BidRequest.VideoOrBuilder;
+import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
+import com.sun.org.apache.xpath.internal.compiler.Keywords;
 
 /**
  * Created by root
@@ -518,6 +523,88 @@ public class SocketData {
 				sBuilder.append(device.getDeviceId()).append(spacers);
 			} else {
 				sBuilder.append(spacers);
+			}
+            
+            
+            if (req.hasVideo()) {
+            	Video video = req.getVideo();
+            	List<VideoFormat> videoFormatList = video.getVideoFormatList();
+            	if (videoFormatList.isEmpty()) {
+					sBuilder.append(spacers);
+				} else {
+					for (VideoFormat videoFormat : videoFormatList) {
+						sBuilder.append(videoFormat.name()).append(charSpacers);
+					}
+					getSubString(sBuilder).append(spacers);
+				}
+            	
+            	if (video.hasContent()) {
+					sBuilder.append(video.getContent());
+					Content content = video.getContent();
+					if (content.hasTitle()) {
+						sBuilder.append(content.getTitle()).append(spacers);
+					} else {
+						sBuilder.append(spacers);
+					}
+					
+					if (content.hasDuration()) {
+						sBuilder.append(content.getDuration()).append(spacers);
+					} else {
+						sBuilder.append(spacers);
+					}
+					
+					ProtocolStringList keywords = content.getKeywordsList();
+					if (keywords.isEmpty()) {
+						sBuilder.append(spacers);
+					} else {
+						for (String string : keywords) {
+							sBuilder.append(string).append(charSpacers);
+						}
+						getSubString(sBuilder).append(spacers);
+					}
+					
+					
+					
+				} else {
+					sBuilder.append(spacers).append(spacers).append(spacers).append(spacers);
+				}
+            	
+            	
+            	if (video.hasVideoadStartDelay()) {
+					sBuilder.append(video.getVideoadStartDelay()).append(spacers);
+				} else {
+					sBuilder.append(spacers);
+				}
+            	
+            	if (video.hasVideoadSectionStartDelay()) {
+					
+            		sBuilder.append(video.getVideoadSectionStartDelay()).append(spacers);
+				} else {
+					sBuilder.append(spacers);
+				}
+            	
+            	if (video.hasMinAdDuration()) {
+					
+            		sBuilder.append(video.getMinAdDuration()).append(spacers);
+				} else {
+					sBuilder.append(spacers);
+				}
+            	
+            	if (video.hasMaxAdDuration()) {
+					sBuilder.append(video.getMaxAdDuration()).append(spacers);
+				} else {
+					sBuilder.append(spacers);
+				}
+            	
+            	if (video.hasProtocol()) {
+					
+            		sBuilder.append(video.getProtocol()).append(spacers);
+				} else {
+					sBuilder.append(spacers);
+				}
+			} else {
+				sBuilder.append(spacers).append(spacers).append(spacers).append(spacers).append(spacers)
+					.append(spacers).append(spacers).append(spacers).append(spacers).append(spacers);
 			}
            
             System.out.println(sBuilder.toString());

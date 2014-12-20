@@ -18,36 +18,27 @@
  */
 package com.pxene.protobuf;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.ProtocolStringList;
+import com.pxene.protobuf.TanxBidding.BidRequest.*;
+import com.pxene.protobuf.TanxBidding.BidRequest.Mobile.Device;
+import com.pxene.protobuf.TanxBidding.BidRequest.Video.Content;
+import com.pxene.protobuf.TanxBidding.BidRequest.Video.VideoFormat;
 import org.apache.commons.io.HexDump;
 import org.apache.flume.Event;
 import org.apache.flume.annotations.InterfaceAudience;
 import org.apache.flume.annotations.InterfaceStability;
 import org.apache.flume.event.EventBuilder;
+import org.apache.flume.source.SyslogSourceConfigurationConstants;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.flume.source.SyslogSourceConfigurationConstants;
-
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.ProtocolStringList;
-import com.pxene.protobuf.TanxBidding.BidRequest.AdzInfo;
-import com.pxene.protobuf.TanxBidding.BidRequest.ContentCategory;
-import com.pxene.protobuf.TanxBidding.BidRequest.Mobile;
-import com.pxene.protobuf.TanxBidding.BidRequest.UserAttribute;
-import com.pxene.protobuf.TanxBidding.BidRequest.Video;
-import com.pxene.protobuf.TanxBidding.BidRequest.Mobile.Device;
-import com.pxene.protobuf.TanxBidding.BidRequest.Video.Content;
-import com.pxene.protobuf.TanxBidding.BidRequest.Video.VideoFormat;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -321,7 +312,6 @@ public class ProtobufSourceUtils {
     bb.get(buf);
     HexDump.dump(buf, 0, System.out, 0);
     */
-
         byte b = 0;
         Event e = null;
         boolean doneReading = false;
@@ -407,11 +397,27 @@ public class ProtobufSourceUtils {
     }
 
     public Event MessageHandle(byte[] bytes) throws InvalidProtocolBufferException {
-    	
-        TanxBidding.BidRequest req = TanxBidding.BidRequest.parseFrom(bytes);
+
+        if (bytes.length <= 12) {
+            //前12字节是请求时间和数据长度的标识
+            return EventBuilder.withBody("", Charset.defaultCharset());
+        }
+        int timeLength = 8;
+        byte[] reqTimeBytes = getDataFromByteArray(bytes, 0, timeLength);
+        long dateLong = byteArrayToLong(reqTimeBytes);
+//        long reqTime = reqTimeByte
+        int dataContainerLength = 4;
+
+        byte[] dataLengthBytes = getDataFromByteArray(bytes, timeLength, dataContainerLength);
+
+        int dataLength = byteArrayToInt(dataLengthBytes);
+        byte[] reqBytes = getDataFromByteArray(bytes, (timeLength + dataContainerLength), dataLength);
+        logger.info("data length is " + reqBytes.length);
+        TanxBidding.BidRequest req = TanxBidding.BidRequest.parseFrom(reqBytes);
         String spacers = "|";
-        Character charSpacers = new Character((char) 0x01);
+        Character charSpacers = 0x01;
         StringBuilder sBuilder = new StringBuilder();
+        sBuilder.append(dateLong).append(spacers);
         sBuilder.append(req.getVersion()).append(spacers);
         sBuilder.append(req.getBid()).append(spacers);
         if (req.hasIsTest()) {
@@ -946,14 +952,12 @@ public class ProtobufSourceUtils {
      			logger.debug("debug info exception is " + e.toString());
      		}
 		}
-//        byte[] body = sBuilder.toString().getBytes();
-        logger.info("call eventBuilder");
-        logger.info(sBuilder.toString());
-		return EventBuilder.withBody(sBuilder.toString(), Charset.defaultCharset());
+        logger.debug(sBuilder.toString());
+		return EventBuilder.withBody(getSubString(sBuilder).toString(), Charset.defaultCharset());
     }
     	
     
-    public static StringBuilder getSubString(StringBuilder sb){
+    public StringBuilder getSubString(StringBuilder sb){
     	
     	if (sb == null) {
 			return null;
@@ -962,6 +966,67 @@ public class ProtobufSourceUtils {
     	String subString = sb.toString().substring(0, sb.length()-1);
     	sb.delete(0, sb.length()).append(subString);
     	return sb;
+    }
+
+    public byte[] getDataFromByteArray(byte[] bt, int start, int length) {
+
+        baos.reset();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(length);
+        int end = start + length;
+        for (int i = start; i < end; i++) {
+
+            byteArrayOutputStream.write(bt[i]);
+        }
+
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    /**
+     * 将8字节的byte数组转成一个long值
+     * @param byteArray
+     * @return 转换后的long型数值
+     */
+    public long byteArrayToLong(byte[] byteArray) {
+        byte[] a = new byte[8];
+        int i = a.length - 1, j = byteArray.length - 1;
+        for (; i >= 0; i--, j--) {// 从b的尾部(即int值的低位)开始copy数据
+            if (j >= 0)
+                a[i] = byteArray[j];
+            else
+                a[i] = 0;// 如果b.length不足4,则将高位补0
+        }
+        // 注意此处和byte数组转换成int的区别在于，下面的转换中要将先将数组中的元素转换成long型再做移位操作，
+        // 若直接做位移操作将得不到正确结果，因为Java默认操作数字时，若不加声明会将数字作为int型来对待，此处必须注意。
+        long v0 = (long) (a[0] & 0xff) << 56;// &0xff将byte值无差异转成int,避免Java自动类型提升后,会保留高位的符号位
+        long v1 = (long) (a[1] & 0xff) << 48;
+        long v2 = (long) (a[2] & 0xff) << 40;
+        long v3 = (long) (a[3] & 0xff) << 32;
+        long v4 = (long) (a[4] & 0xff) << 24;
+        long v5 = (long) (a[5] & 0xff) << 16;
+        long v6 = (long) (a[6] & 0xff) << 8;
+        long v7 = (long) (a[7] & 0xff);
+        return v0 + v1 + v2 + v3 + v4 + v5 + v6 + v7;
+    }
+
+    /**
+     * 将4字节的byte数组转成一个int值
+     * @param b
+     * @return
+     */
+    public int byteArrayToInt(byte[] b){
+        byte[] a = new byte[4];
+        int i = a.length - 1,j = b.length - 1;
+        for (; i >= 0 ; i--,j--) {//从b的尾部(即int值的低位)开始copy数据
+            if(j >= 0)
+                a[i] = b[j];
+            else
+                a[i] = 0;//如果b.length不足4,则将高位补0
+        }
+        int v0 = (a[0] & 0xff) << 24;//&0xff将byte值无差异转成int,避免Java自动类型提升后,会保留高位的符号位
+        int v1 = (a[1] & 0xff) << 16;
+        int v2 = (a[2] & 0xff) << 8;
+        int v3 = (a[3] & 0xff) ;
+        return v0 + v1 + v2 + v3;
     }
 }
 

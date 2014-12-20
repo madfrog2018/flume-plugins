@@ -18,39 +18,28 @@
  */
 package com.pxene.protobuf;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 import com.google.common.annotations.VisibleForTesting;
-
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.commons.io.HexDump;
 import org.apache.flume.ChannelException;
-import org.apache.flume.Context;
-import org.apache.flume.CounterGroup;
-import org.apache.flume.Event;
-import org.apache.flume.EventDrivenSource;
+import org.apache.flume.*;
 import org.apache.flume.conf.Configurable;
 import org.apache.flume.conf.Configurables;
 import org.apache.flume.source.AbstractSource;
 import org.apache.flume.source.SyslogSourceConfigurationConstants;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
-import org.jboss.netty.handler.codec.protobuf.ProtobufDecoder;
-import org.jboss.netty.handler.codec.protobuf.ProtobufEncoder;
-import org.jboss.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
-import org.jboss.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
-import org.jboss.netty.handler.codec.string.StringDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class ProtobufSource extends AbstractSource
         implements EventDrivenSource, Configurable {
@@ -106,13 +95,13 @@ public class ProtobufSource extends AbstractSource
             byte[] byteBuffer = new byte[length];
             byteBuffer = buffer.array();
 
-//            while(buffer.readable()) {
+            while(buffer.readable()) {
             	
             	try {
 					Event e = ProtobufSourceUtils.MessageHandle(byteBuffer);
 					if (e == null) {
 	                    logger.info("handle message error");
-//	                    continue;
+	                    continue;
 	                }
 	                try {
 	                    getChannelProcessor().processEvent(e);
@@ -125,9 +114,9 @@ public class ProtobufSource extends AbstractSource
 				} catch (InvalidProtocolBufferException e) {
 					counterGroup.incrementAndGet("events.dropped");
 					logger.error("invalid protocolbuffer error is " + e.toString());
-					
-				}
-//            }
+
+            }
+            }
             
 //            while (buff.readable()) {
 //                Event e = ProtobufSourceUtils.extractEvent(buff);

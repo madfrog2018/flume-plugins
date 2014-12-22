@@ -25,9 +25,9 @@ public class SocketData {
 		System.out.println(new Date());
 		int count = 1;
         try {
-        	for (int i = 0; i < 1; i++) {
+			Socket socket = new Socket("192.168.2.7", 5140);
+        	for (int i = 0; i < 30; i++) {
         	
-        		Socket socket = new Socket("192.168.2.7", 5140);
 //            TanxBidding.BidRequest.Builder builder = TanxBidding.BidRequest.newBuilder();
 //            TanxBidding.BidRequest.AdzInfo.Builder AdzInfoOrBuilder = TanxBidding.BidRequest.AdzInfo.newBuilder();
 //            TanxBidding.BidRequest.UserAttribute.Builder userBuilder = TanxBidding.BidRequest.UserAttribute.newBuilder();
@@ -612,6 +612,7 @@ public class SocketData {
 			}
         	System.out.println(new Date());
         	System.out.println(count);
+			socket.close();
         } catch (IOException e) {
             logger.error("error is " + e.toString());
         }

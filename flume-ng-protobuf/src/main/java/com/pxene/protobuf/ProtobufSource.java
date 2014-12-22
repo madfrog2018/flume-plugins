@@ -115,7 +115,10 @@ public class ProtobufSource extends AbstractSource
 					counterGroup.incrementAndGet("events.dropped");
 					logger.error("invalid protocolbuffer error is " + e.toString());
 
-            }
+                } finally {
+                    buffer.clear();
+                    logger.info("buffer readable is " + buffer.readable());
+                }
             }
             
 //            while (buff.readable()) {

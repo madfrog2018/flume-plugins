@@ -35,6 +35,7 @@ import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Map;
@@ -54,7 +55,7 @@ public class ProtobufSource extends AbstractSource
     private Map<String, String> formaterProp;
     private CounterGroup counterGroup = new CounterGroup();
     private Boolean keepFields;
-
+    public ByteArrayOutputStream baos = new ByteArrayOutputStream();
     public class protobufHandler extends SimpleChannelHandler {
 
         private ProtobufSourceUtils ProtobufSourceUtils = new ProtobufSourceUtils();
@@ -80,46 +81,28 @@ public class ProtobufSource extends AbstractSource
         @Override
         public void messageReceived(ChannelHandlerContext ctx, MessageEvent mEvent) {
             ChannelBuffer buffer = (ChannelBuffer) mEvent.getMessage();
-//            ByteBuffer bb = buffer.toByteBuffer();
-//            int remaining = bb.remaining();
-//            logger.info("remaining is " + remaining);
-//            byte[] buf = new byte[remaining];
-//            bb.get(buf);
-//            try {
-//                HexDump.dump(buf, 0, System.out, 0);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-            int length = buffer.capacity();
-            logger.info("length is " + length);
-            byte[] byteBuffer = new byte[length];
-            byteBuffer = buffer.array();
-
             while(buffer.readable()) {
-            	
-            	try {
-					Event e = ProtobufSourceUtils.MessageHandle(byteBuffer);
-					if (e == null) {
-	                    logger.info("handle message error");
-	                    continue;
-	                }
-	                try {
-	                    getChannelProcessor().processEvent(e);
-	                    logger.info("events success");
-	                    counterGroup.incrementAndGet("events.success");
-	                } catch (ChannelException ex) {
-	                    counterGroup.incrementAndGet("events.dropped");
-	                    logger.error("Error writting to channel, event dropped", ex);
-	                }
-				} catch (InvalidProtocolBufferException e) {
-					counterGroup.incrementAndGet("events.dropped");
-					logger.error("invalid protocolbuffer error is " + e.toString());
-
-                } finally {
-                    buffer.clear();
-                    logger.info("buffer readable is " + buffer.readable());
+                Event e = null;
+                try {
+                    e = ProtobufSourceUtils.extractEvent(baos,buffer);
+                } catch (InvalidProtocolBufferException e1) {
+                    logger.error("InvalidProtocolBufferException is " + e1.toString());
+                    continue;
+                }
+                if (e == null) {
+                    logger.info("handle message error");
+                    continue;
+                }
+                try {
+                    getChannelProcessor().processEvent(e);
+                    logger.info("events success");
+                    counterGroup.incrementAndGet("events.success");
+                } catch (ChannelException ex) {
+                    counterGroup.incrementAndGet("events.dropped");
+                    logger.error("Error writting to channel, event dropped", ex);
                 }
             }
+        }
             
 //            while (buff.readable()) {
 //                Event e = ProtobufSourceUtils.extractEvent(buff);
@@ -137,7 +120,6 @@ public class ProtobufSource extends AbstractSource
 //                }
 //            }
 
-        }
     }
 
     @Override

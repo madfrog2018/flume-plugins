@@ -24,6 +24,8 @@ import com.pxene.protobuf.TanxBidding.BidRequest.*;
 import com.pxene.protobuf.TanxBidding.BidRequest.Mobile.Device;
 import com.pxene.protobuf.TanxBidding.BidRequest.Video.Content;
 import com.pxene.protobuf.TanxBidding.BidRequest.Video.VideoFormat;
+
+import org.apache.commons.io.HexDump;
 import org.apache.flume.Event;
 import org.apache.flume.annotations.InterfaceAudience;
 import org.apache.flume.annotations.InterfaceStability;
@@ -34,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -302,7 +305,7 @@ public class ProtobufSourceUtils {
     }
 
     // extract relevant syslog data needed for building Flume event
-    public Event extractEvent(ChannelBuffer in){
+    public Event extractEvent(ByteArrayOutputStream boss ,ChannelBuffer in) throws InvalidProtocolBufferException {
 
     /* for protocol debugging
     ByteBuffer bb = in.toByteBuffer();
@@ -311,75 +314,53 @@ public class ProtobufSourceUtils {
     bb.get(buf);
     HexDump.dump(buf, 0, System.out, 0);
     */
-        byte b = 0;
+//        byte b = 0;
         Event e = null;
         boolean doneReading = false;
-
+        byte[] dateTimeBytes = new byte[8];
+        byte[] dataBytes = new byte[4];
+        int dataLength = 0;
+        int i = 0;
+        long dateLong = 0l;
         try {
+        	logger.info("boss size is " + boss.size());
+            if (0 != boss.size()){
+                in.setBytes(0,boss.toByteArray());
+                boss = new ByteArrayOutputStream();
+            }
+            
             while (!doneReading && in.readable()) {
-                b = in.readByte();
-                switch (m) {
-                    case START:
-                        if (b == '<') {
-                            baos.write(b);
-                            m = Mode.PRIO;
-                        } else if(b == '\n'){
-                            //If the character is \n, it was because the last event was exactly
-                            //as long  as the maximum size allowed and
-                            //the only remaining character was the delimiter - '\n', or
-                            //multiple delimiters were sent in a row.
-                            //Just ignore it, and move forward, don't change the mode.
-                            //This is a no-op, just ignore it.
-                            logger.debug("Delimiter found while in START mode, ignoring..");
-
-                        } else {
-                            isBadEvent = true;
-                            baos.write(b);
-                            //Bad event, just dump everything as if it is data.
-                            m = Mode.DATA;
-                        }
-                        break;
-                    case PRIO:
-                        baos.write(b);
-                        if (b == '>') {
-                            m = Mode.DATA;
-                        } else {
-                            char ch = (char) b;
-                            prio.append(ch);
-                            if (!Character.isDigit(ch)) {
-                                isBadEvent = true;
-                                //If we hit a bad priority, just write as if everything is data.
-                                m = Mode.DATA;
-                            }
-                        }
-                        break;
-                    case DATA:
-                        // TCP syslog entries are separated by '\n'
-                        if (b == '\n') {
-                            e = buildEvent();
-                            doneReading = true;
-                        } else {
-                            baos.write(b);
-                        }
-                        if(baos.size() == this.maxSize && !doneReading){
-                            isIncompleteEvent = true;
-                            e = buildEvent();
-                            doneReading = true;
-                        }
-                        break;
+                if (0 == dataLength && 0l == dateLong) {
+            		in.readBytes(dateTimeBytes, 0, 8);
+                    dateLong = byteArrayToLong(dateTimeBytes);
+                    logger.info("dateLong is " + dateLong);
+                    in.readBytes(dataBytes, 0, 4);
+                    dataLength = byteArrayToInt(dataBytes);
+                    logger.info("data length is " + dataLength);
+                    doneReading = false;
+                } else {
+                    byte b = in.readByte();
+                    baos.write(b);
+                    i++;
+                    if (dataLength == i) {
+                        e = buildMessage(dateLong, baos.toByteArray());
+                        doneReading = true;
+                        dataLength = 0;
+                        dateLong = 0l;
+                        i = 0;
+                        baos.reset();
+                    }
                 }
-
             }
-
-            // UDP doesn't send a newline, so just use what we received
-            if (e == null && isUdp) {
-                doneReading = true;
-                e = buildEvent();
-            }
+        }catch(InvalidProtocolBufferException e1){
+            logger.error(e1.getMessage());
         } finally {
-            // no-op
+            if(doneReading){
+                while(in.readable()){
+                    boss.write(in.readByte());
+                }
+            }
         }
-
         return e;
     }
 
@@ -395,25 +376,20 @@ public class ProtobufSourceUtils {
         this.keepFields= keepFields;
     }
 
-    public Event MessageHandle(byte[] bytes) throws InvalidProtocolBufferException {
+    public Event buildMessage(long dateLong, byte[] reqBytes) throws InvalidProtocolBufferException {
 
-        boolean isDoning = false;
-        Event e = null;
-            if (bytes.length <= 12) {
-                //前12字节是请求时间和数据长度的标识
-                return EventBuilder.withBody("", Charset.defaultCharset());
-            }
-            int timeLength = 8;
-            byte[] reqTimeBytes = getDataFromByteArray(bytes, 0, timeLength);
-            long dateLong = byteArrayToLong(reqTimeBytes);
-//        long reqTime = reqTimeByte
-            int dataContainerLength = 4;
 
-            byte[] dataLengthBytes = getDataFromByteArray(bytes, timeLength, dataContainerLength);
+//        byte[] bytes = baos.toByteArray();
+//            int timeLength = 8;
+//            byte[] reqTimeBytes = getDataFromByteArray(bytes, 0, timeLength);
+//            long dateLong = byteArrayToLong(reqTimeBytes);
+//            int dataContainerLength = 4;
 
-            int dataLength = byteArrayToInt(dataLengthBytes);
-            byte[] reqBytes = getDataFromByteArray(bytes, (timeLength + dataContainerLength), dataLength);
-            logger.info("data length is " + reqBytes.length);
+//            byte[] dataLengthBytes = getDataFromByteArray(bytes, timeLength, dataContainerLength);
+
+//            int dataLength = byteArrayToInt(dataLengthBytes);
+//            byte[] reqBytes = getDataFromByteArray(bytes, (timeLength + dataContainerLength), dataLength);
+//            logger.info("data length is " + reqBytes.length);
             TanxBidding.BidRequest req = TanxBidding.BidRequest.parseFrom(reqBytes);
             String spacers = "|";
             Character charSpacers = 0x01;
@@ -945,8 +921,8 @@ public class ProtobufSourceUtils {
 
 
             logger.debug(sBuilder.toString());
-            e = EventBuilder.withBody(getSubString(sBuilder).toString(), Charset.defaultCharset());
-        return e;
+        return EventBuilder.withBody(getSubString(sBuilder).toString(), Charset.defaultCharset());
+
     }
     	
     

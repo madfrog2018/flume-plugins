@@ -26,7 +26,7 @@ public class SocketData {
 		int count = 1;
         try {
 			Socket socket = new Socket("192.168.2.7", 5140);
-        	for (int i = 0; i < 30; i++) {
+        	for (int i = 0; i < 10000; i++) {
         	
 //            TanxBidding.BidRequest.Builder builder = TanxBidding.BidRequest.newBuilder();
 //            TanxBidding.BidRequest.AdzInfo.Builder AdzInfoOrBuilder = TanxBidding.BidRequest.AdzInfo.newBuilder();
@@ -56,15 +56,12 @@ public class SocketData {
 			FileInputStream inputStream = new FileInputStream(file);
             byte[] bytes = new byte[inputStream.available()];
             inputStream.read(bytes);
-          HexDump.dump(bytes, 0, System.out, 0);
+//            HexDump.dump(bytes, 0, System.out, 0);
 
-				if (bytes.length <= 12) {
-					//前12字节是请求时间和数据长度的标识
-					return;
-				}
 				int timeLength = 8;
 				byte[] reqTimeBytes = getDataFromByteArray(bytes, 0, timeLength);
 				long dateLong = byteArrayToLong(reqTimeBytes);
+				logger.info("dataLong is " + dateLong);
 				int dataContainerLength = 4;
 
 				byte[] dataLengthBytes = getDataFromByteArray(bytes, timeLength, dataContainerLength);
@@ -75,7 +72,8 @@ public class SocketData {
             Character charSpacers = 0x01;
             TanxBidding.BidRequest req = TanxBidding.BidRequest.parseFrom(reqBytes);
             StringBuilder sBuilder = new StringBuilder();
-            sBuilder.append(req.getVersion()).append(spacers);
+//            sBuilder.append(req.getVersion()).append(spacers);
+            sBuilder.append(count).append(spacers);
             sBuilder.append(req.getBid()).append(spacers);
             
             if (req.hasIsTest()) {
@@ -603,14 +601,16 @@ public class SocketData {
 			}
            
             System.out.println(sBuilder.toString());
-            System.out.println(sBuilder.toString().getBytes());
-            HexDump.dump(sBuilder.toString().getBytes(), 0, System.out, 0);
+//            System.out.println(sBuilder.toString().getBytes());
+//            HexDump.dump(sBuilder.toString().getBytes(), 0, System.out, 0);
             OutputStream out = socket.getOutputStream();
+            byte[] sbuilderBytes = sBuilder.toString().getBytes();
+            
             out.write(bytes);
 //            socket.close();
             count++;
 			}
-        	System.out.println(new Date());
+//        	System.out.println(new Date());
         	System.out.println(count);
 			socket.close();
         } catch (IOException e) {

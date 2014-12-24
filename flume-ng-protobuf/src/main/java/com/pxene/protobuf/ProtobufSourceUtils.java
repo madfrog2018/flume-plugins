@@ -18,14 +18,20 @@
  */
 package com.pxene.protobuf;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.ProtocolStringList;
-import com.pxene.protobuf.TanxBidding.BidRequest.*;
-import com.pxene.protobuf.TanxBidding.BidRequest.Mobile.Device;
-import com.pxene.protobuf.TanxBidding.BidRequest.Video.Content;
-import com.pxene.protobuf.TanxBidding.BidRequest.Video.VideoFormat;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.apache.commons.io.HexDump;
 import org.apache.flume.Event;
 import org.apache.flume.annotations.InterfaceAudience;
 import org.apache.flume.annotations.InterfaceStability;
@@ -35,15 +41,16 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.ProtocolStringList;
+import com.pxene.protobuf.TanxBidding.BidRequest.AdzInfo;
+import com.pxene.protobuf.TanxBidding.BidRequest.ContentCategory;
+import com.pxene.protobuf.TanxBidding.BidRequest.Mobile;
+import com.pxene.protobuf.TanxBidding.BidRequest.Mobile.Device;
+import com.pxene.protobuf.TanxBidding.BidRequest.UserAttribute;
+import com.pxene.protobuf.TanxBidding.BidRequest.Video;
+import com.pxene.protobuf.TanxBidding.BidRequest.Video.Content;
+import com.pxene.protobuf.TanxBidding.BidRequest.Video.VideoFormat;
 
 @InterfaceAudience.Private
 @InterfaceStability.Evolving
@@ -316,7 +323,6 @@ public class ProtobufSourceUtils {
     */
 //        byte b = 0;
         Event e = null;
-        boolean doneReading = false;
         byte[] dateTimeBytes = new byte[8];
         byte[] dataBytes = new byte[4];
         int dataLength = 0;
@@ -329,7 +335,7 @@ public class ProtobufSourceUtils {
                 boss = new ByteArrayOutputStream();
             }
             
-            while (!doneReading && in.readable()) {
+            while (in.readable()) {
                 if (0 == dataLength && 0l == dateLong) {
             		in.readBytes(dateTimeBytes, 0, 8);
                     dateLong = byteArrayToLong(dateTimeBytes);
@@ -337,14 +343,12 @@ public class ProtobufSourceUtils {
                     in.readBytes(dataBytes, 0, 4);
                     dataLength = byteArrayToInt(dataBytes);
                     logger.info("data length is " + dataLength);
-                    doneReading = false;
                 } else {
                     byte b = in.readByte();
                     baos.write(b);
                     i++;
                     if (dataLength == i) {
                         e = buildMessage(dateLong, baos.toByteArray());
-                        doneReading = true;
                         dataLength = 0;
                         dateLong = 0l;
                         i = 0;
@@ -352,14 +356,15 @@ public class ProtobufSourceUtils {
                     }
                 }
             }
+            if(0 != baos.size()){
+            	boss.write(baos.toByteArray());
+            }
         }catch(InvalidProtocolBufferException e1){
             logger.error(e1.getMessage());
-        } finally {
-            if(doneReading){
-                while(in.readable()){
-                    boss.write(in.readByte());
-                }
-            }
+        } catch (IOException e1) {
+        	logger.error(e1.getMessage());
+		} finally {
+
         }
         return e;
     }

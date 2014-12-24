@@ -5,6 +5,7 @@ import com.pxene.protobuf.TanxBidding.BidRequest.*;
 import com.pxene.protobuf.TanxBidding.BidRequest.Mobile.Device;
 import com.pxene.protobuf.TanxBidding.BidRequest.Video.Content;
 import com.pxene.protobuf.TanxBidding.BidRequest.Video.VideoFormat;
+
 import org.apache.commons.io.HexDump;
 import org.apache.log4j.Logger;
 
@@ -27,7 +28,7 @@ public class SocketData {
         try {
 			Socket socket = new Socket("192.168.2.7", 5140);
         	for (int i = 0; i < 10000; i++) {
-        	
+//        	Thread.sleep(1000);
 //            TanxBidding.BidRequest.Builder builder = TanxBidding.BidRequest.newBuilder();
 //            TanxBidding.BidRequest.AdzInfo.Builder AdzInfoOrBuilder = TanxBidding.BidRequest.AdzInfo.newBuilder();
 //            TanxBidding.BidRequest.UserAttribute.Builder userBuilder = TanxBidding.BidRequest.UserAttribute.newBuilder();
@@ -51,12 +52,12 @@ public class SocketData {
 //            List<AdzInfo> ad = req1.getAdzinfoList();
 //            System.out.println("pid is " + req1.getAdzinfoList());
 //            HexDump.dump(request.toByteArray(), 0, System.out, 0);
-            File file = new File("D:\\git\\flume-plugins\\flume-ng-protobuf\\src\\main\\resources\\test.txt");
+            File file = new File("D:\\work\\flume-plugins\\flume-ng-protobuf\\src\\main\\resources\\test.txt");
             @SuppressWarnings("resource")
 			FileInputStream inputStream = new FileInputStream(file);
             byte[] bytes = new byte[inputStream.available()];
             inputStream.read(bytes);
-//            HexDump.dump(bytes, 0, System.out, 0);
+            HexDump.dump(bytes, 0, System.out, 0);
 
 				int timeLength = 8;
 				byte[] reqTimeBytes = getDataFromByteArray(bytes, 0, timeLength);
@@ -610,12 +611,15 @@ public class SocketData {
 //            socket.close();
             count++;
 			}
-//        	System.out.println(new Date());
+        	System.out.println(new Date());
         	System.out.println(count);
 			socket.close();
         } catch (IOException e) {
             logger.error("error is " + e.toString());
-        }
+//        } catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+		}
     }
     
     public static StringBuilder getSubString(StringBuilder sb){

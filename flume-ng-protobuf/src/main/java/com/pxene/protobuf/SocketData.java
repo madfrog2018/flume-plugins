@@ -52,7 +52,7 @@ public class SocketData {
 //            List<AdzInfo> ad = req1.getAdzinfoList();
 //            System.out.println("pid is " + req1.getAdzinfoList());
 //            HexDump.dump(request.toByteArray(), 0, System.out, 0);
-            File file = new File("D:\\work\\flume-plugins\\flume-ng-protobuf\\src\\main\\resources\\test.txt");
+            File file = new File("D:\\git\\flume-plugins\\flume-ng-protobuf\\src\\main\\resources\\test.txt");
             @SuppressWarnings("resource")
 			FileInputStream inputStream = new FileInputStream(file);
             byte[] bytes = new byte[inputStream.available()];

@@ -84,7 +84,7 @@ public class ProtobufSource extends AbstractSource
 		@Override
 		public void messageReceived(ChannelHandlerContext ctx,
 				MessageEvent mEvent) {
-			logger.info("the messageReceived metdo is start");
+//			logger.info("the messageReceived metdo is start");
 			ChannelBuffer buffer = (ChannelBuffer) mEvent.getMessage();
 			byte[] dateTimeBytes = new byte[8];
 			byte[] dataBytes = new byte[4];
@@ -93,30 +93,29 @@ public class ProtobufSource extends AbstractSource
 			long dateLong = 0l;
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			while (buffer.readable()) {
-				logger.info("buffer readable");
 				Event e = null;
 				try {
 					if (0 == dataLength && 0l == dateLong) {
 
 						buffer.readBytes(dataBytes, 0, 4);
-						try {
-							HexDump.dump(dataBytes, 0, System.out,
-									0);
-						} catch (Exception e2) {
-							// TODO Auto-generated catch block
-							e2.printStackTrace();
-						}
+//						try {
+//							HexDump.dump(dataBytes, 0, System.out,
+//									0);
+//						} catch (Exception e2) {
+//							// TODO Auto-generated catch block
+//							e2.printStackTrace();
+//						}
 						dataLength = ProtobufSourceUtils
 								.byteArrayToInt(dataBytes);
 
                         buffer.readBytes(dateTimeBytes, 0, 8);
-						try {
-							HexDump.dump(dateTimeBytes, 0, System.out,
-									0);
-						} catch (Exception e2) {
-							// TODO Auto-generated catch block
-							e2.printStackTrace();
-						}
+//						try {
+//							HexDump.dump(dateTimeBytes, 0, System.out,
+//									0);
+//						} catch (Exception e2) {
+//							// TODO Auto-generated catch block
+//							e2.printStackTrace();
+//						}
                         dateLong = ProtobufSourceUtils
                                 .byteArrayToLong(dateTimeBytes);
 						logger.info("the dataLength is " + dataLength);
@@ -127,13 +126,13 @@ public class ProtobufSource extends AbstractSource
 						i++;
 						if (dataLength == i) {
 							logger.info("the buildMessage is over");
-							try {
-								HexDump.dump(baos.toByteArray(), 0, System.out,
-										0);
-							} catch (Exception e2) {
-								// TODO Auto-generated catch block
-								e2.printStackTrace();
-							}
+//							try {
+//								HexDump.dump(baos.toByteArray(), 0, System.out,
+//										0);
+//							} catch (Exception e2) {
+//								// TODO Auto-generated catch block
+//								e2.printStackTrace();
+//							}
 							e = ProtobufSourceUtils.buildMessage(dateLong,
 									baos.toByteArray());
 							dataLength = 0;
@@ -161,13 +160,13 @@ public class ProtobufSource extends AbstractSource
 					logger.error("Error writting to channel, event dropped", ex);
 				}
 			}
-			try {
-				HexDump.dump(baos.toByteArray(), 0, System.out,
-						0);
-			} catch (Exception e2) {
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
-			}
+//			try {
+//				HexDump.dump(baos.toByteArray(), 0, System.out,
+//						0);
+//			} catch (Exception e2) {
+//				// TODO Auto-generated catch block
+//				e2.printStackTrace();
+//			}
 		}
 	}
 

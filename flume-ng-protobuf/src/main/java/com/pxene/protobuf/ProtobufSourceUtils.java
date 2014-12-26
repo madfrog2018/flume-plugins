@@ -703,7 +703,7 @@ public class ProtobufSourceUtils {
 				for (Integer integer : excludedSensitiveCategorys) {
 					sBuilder.append(integer).append(charSpacers);
 				}
-				sBuilder.append(getSubString(sBuilder)).append(spacers);
+				getSubString(sBuilder).append(spacers);
 			}
             
             List<Integer> excludedAdCategorys = req.getExcludedAdCategoryList();

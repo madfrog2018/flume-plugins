@@ -25,99 +25,78 @@ public class SocketData {
 	public static void main(String[] args) {
 		System.out.println(new Date());
 		int count = 1;
+
         try {
 			Socket socket = new Socket("192.168.2.7", 5140);
-        	for (int i = 0; i < 10000; i++) {
-//        	Thread.sleep(1000);
-//            TanxBidding.BidRequest.Builder builder = TanxBidding.BidRequest.newBuilder();
-//            TanxBidding.BidRequest.AdzInfo.Builder AdzInfoOrBuilder = TanxBidding.BidRequest.AdzInfo.newBuilder();
-//            TanxBidding.BidRequest.UserAttribute.Builder userBuilder = TanxBidding.BidRequest.UserAttribute.newBuilder();
-//            TanxBidding.BidRequest.ContentCategory.Builder contentBuilder = TanxBidding.BidRequest.ContentCategory.newBuilder();
-//            builder.setBid("0a67f524000054813cfc6d8e0015ad64");
-//            builder.setVersion(3);
-//            AdzInfoOrBuilder.setId(1);
-//            AdzInfoOrBuilder.setPid("mm_45015339_4154953_22394227");
-//            userBuilder.setId(1);
-//            contentBuilder.setId(1);
-//            contentBuilder.setConfidenceLevel(12);
-//            AdzInfoOrBuilder.build();
-//            userBuilder.build();
-//            contentBuilder.build();
-//            builder.addAdzinfo(AdzInfoOrBuilder.build());
-//            builder.addUserAttribute(userBuilder.build());
-//            builder.addContentCategories(contentBuilder.build());
-//            TanxBidding.BidRequest request = builder.build();
-//            TanxBidding.BidRequest req1 = TanxBidding.BidRequest.parseFrom(request.toByteArray());
-//            System.out.println("bid is " + req1.getBid());
-//            List<AdzInfo> ad = req1.getAdzinfoList();
-//            System.out.println("pid is " + req1.getAdzinfoList());
-//            HexDump.dump(request.toByteArray(), 0, System.out, 0);
-            File file = new File("D:\\git\\flume-plugins\\flume-ng-protobuf\\src\\main\\resources\\test.txt");
+        	for (int i = 0; i < 3; i++) {
+            File file = new File("D:\\git\\flume-plugins\\flume-ng-protobuf\\test.txt");
             @SuppressWarnings("resource")
 			FileInputStream inputStream = new FileInputStream(file);
             byte[] bytes = new byte[inputStream.available()];
             inputStream.read(bytes);
             HexDump.dump(bytes, 0, System.out, 0);
 
-				int timeLength = 8;
-				byte[] reqTimeBytes = getDataFromByteArray(bytes, 0, timeLength);
-				long dateLong = byteArrayToLong(reqTimeBytes);
-				logger.info("dataLong is " + dateLong);
-				int dataContainerLength = 4;
+			int timeLength = 8;
+			byte[] reqTimeBytes = getDataFromByteArray(bytes, 0, timeLength);
+			long dateLong = byteArrayToLong(reqTimeBytes);
+			logger.info("dataLong is " + dateLong);
+			int dataContainerLength = 4;
 
-				byte[] dataLengthBytes = getDataFromByteArray(bytes, timeLength, dataContainerLength);
-				int dataLength = byteArrayToInt(dataLengthBytes);
-				byte[] reqBytes = getDataFromByteArray(bytes, (timeLength + dataContainerLength), dataLength);
-				logger.info("data length is " + reqBytes.length);
+			byte[] dataLengthBytes = getDataFromByteArray(bytes, timeLength, dataContainerLength);
+			int dataLength = byteArrayToInt(dataLengthBytes);
+			byte[] reqBytes = getDataFromByteArray(bytes, (timeLength + dataContainerLength), dataLength);
+			logger.info("data length is " + reqBytes.length);
             String spacers = "|";
             Character charSpacers = 0x01;
+            Character NULL = 0x02;
             TanxBidding.BidRequest req = TanxBidding.BidRequest.parseFrom(reqBytes);
             StringBuilder sBuilder = new StringBuilder();
-//            sBuilder.append(req.getVersion()).append(spacers);
-            sBuilder.append(count).append(spacers);
+			sBuilder.append(dateLong).append(spacers);
+            sBuilder.append(req.getVersion()).append(spacers);
+//            sBuilder.append(count).append(spacers);
             sBuilder.append(req.getBid()).append(spacers);
             
             if (req.hasIsTest()) {
             	sBuilder.append(req.getIsTest()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (req.hasIsPing()) {
             	sBuilder.append(req.getIsPing()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (req.hasTid()) {
             	sBuilder.append(req.getTid()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (req.hasIp()) {
 				sBuilder.append(req.getIp()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (req.hasUserAgent()) {
 				
             	sBuilder.append(req.getUserAgent()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (req.hasTimezoneOffset()) {
             	
             	sBuilder.append(req.getTimezoneOffset()).append(spacers);
             } else {
-            	sBuilder.append(spacers);
+            	sBuilder.append(NULL).append(spacers);
             }
             
             List<Integer> userVertical = req.getUserVerticalList();
             if (userVertical.isEmpty()) {
-            	sBuilder.append(spacers);
+            	sBuilder.append(NULL).append(spacers);
     		} else {
     			for (Integer integer : userVertical) {
     				sBuilder.append(integer).append(charSpacers);
@@ -128,7 +107,7 @@ public class SocketData {
             if (req.hasTidVersion()) {
             	sBuilder.append(req.getTidVersion()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             
@@ -138,7 +117,7 @@ public class SocketData {
 				sBuilder.append(req.getHostedMatchData()).append(spacers);
 			
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             sBuilder.append(req.getUserAttributeCount()).append(spacers);
@@ -146,8 +125,8 @@ public class SocketData {
             List<UserAttribute> userAttributeList = req.getUserAttributeList();
             if (userAttributeList.isEmpty()) {
     			
-            	sBuilder.append(spacers);
-            	sBuilder.append(spacers);
+            	sBuilder.append(NULL).append(spacers);
+            	sBuilder.append(NULL).append(spacers);
     		} else {
     			
     			StringBuilder userAtrributeIdBuilder = new StringBuilder();
@@ -165,7 +144,7 @@ public class SocketData {
             
             ProtocolStringList excludedUrls = req.getExcludedClickThroughUrlList();
             if (excludedUrls.isEmpty()) {
-            	sBuilder.append(spacers);
+            	sBuilder.append(NULL).append(spacers);
 			} else {
 				
 				for (String string : excludedUrls) {
@@ -178,37 +157,37 @@ public class SocketData {
 				
             	sBuilder.append(req.getUrl()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (req.hasCategory()) {
 				sBuilder.append(req.getCategory()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (req.hasAdxType()) {
 				sBuilder.append(req.getAdxType()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (req.hasAnonymousId()) {
             	sBuilder.append(req.getAnonymousId()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (req.hasDetectedLanguage()) {
             	sBuilder.append(req.getDetectedLanguage()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (req.hasCategoryVersion()) {
 				sBuilder.append(req.getCategoryVersion()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             List<AdzInfo> adzInfos = req.getAdzinfoList();
@@ -222,27 +201,27 @@ public class SocketData {
 					if (adzInfo.hasId()) {
 	            		adzInfoBuilder.append(adzInfo.getId()).append(spacers);
 					} else {
-						adzInfoBuilder.append(spacers);
+						adzInfoBuilder.append(NULL).append(spacers);
 					}
 	            	if (adzInfo.hasPid()) {
 	            		adzInfoBuilder.append(adzInfo.getPid()).append(spacers);
 					} else {
-						adzInfoBuilder.append(spacers);
+						adzInfoBuilder.append(NULL).append(spacers);
 					}
 	            	if (adzInfo.hasSize()) {
 	            		adzInfoBuilder.append(adzInfo.getSize()).append(spacers);
 					} else {
-						adzInfoBuilder.append(spacers);
+						adzInfoBuilder.append(NULL).append(spacers);
 					}
 	            	if (adzInfo.hasAdBidCount()) {
 	            		adzInfoBuilder.append(adzInfo.getAdBidCount()).append(spacers);
 					} else {
-						adzInfoBuilder.append(spacers);
+						adzInfoBuilder.append(NULL).append(spacers);
 					}
 	            	
 	            	List<Integer> viewTypes = adzInfo.getViewTypeList();
 	            	if (viewTypes.isEmpty()) {
-						adzInfoBuilder.append(spacers);
+						adzInfoBuilder.append(NULL).append(spacers);
 					} else {
 						for (Integer integer : viewTypes) {
 							
@@ -254,7 +233,7 @@ public class SocketData {
 	            	
 	            	List<Integer> excludedFilters = adzInfo.getExcludedFilterList();
 	            	if (excludedFilters.isEmpty()) {
-	            		adzInfoBuilder.append(spacers);
+	            		adzInfoBuilder.append(NULL).append(spacers);
 					} else {
 						for (Integer integer : excludedFilters) {
 							adzInfoExcludedFilterBuilder.append(integer).append(charSpacers);
@@ -267,20 +246,20 @@ public class SocketData {
 						
 	            		adzInfoBuilder.append(adzInfo.getMinCpmPrice()).append(spacers);
 					} else {
-						adzInfoBuilder.append(spacers);
+						adzInfoBuilder.append(NULL).append(spacers);
 					}
 	            	
 	            	
 	            	if (adzInfo.hasViewScreen()) {
 	            		adzInfoBuilder.append(adzInfo.getViewScreen().name()).append(spacers);
 					} else {
-						adzInfoBuilder.append(spacers);
+						adzInfoBuilder.append(NULL).append(spacers);
 					}
 	            	
 	            	if (adzInfo.hasPageSessionAdIdx()) {
 	            		adzInfoBuilder.append(adzInfo.getPageSessionAdIdx()).append(spacers);
 					} else {
-						adzInfoBuilder.append(spacers);
+						adzInfoBuilder.append(NULL).append(spacers);
 					}
 				} else {
 					
@@ -288,27 +267,27 @@ public class SocketData {
 					if (adzInfo.hasId()) {
 						mergeredValues[0] = values[0] + charSpacers + adzInfo.getId();
 					} else {
-						mergeredValues[0] = values[0] + charSpacers;
+						mergeredValues[0] = values[0] + NULL + charSpacers;
 					}
 	            	if (adzInfo.hasPid()) {
 	            		mergeredValues[1] = values[1] + charSpacers + adzInfo.getPid();
 					} else {
-						mergeredValues[1] = values[1] + charSpacers;
+						mergeredValues[1] = values[1] + NULL + charSpacers;
 					}
 	            	if (adzInfo.hasSize()) {
 	            		mergeredValues[2] = values[2] + charSpacers + adzInfo.getSize();
 					} else {
-						mergeredValues[2] = values[2] + charSpacers;
+						mergeredValues[2] = values[2] + NULL + charSpacers;
 					}
 	            	if (adzInfo.hasAdBidCount()) {
 	            		mergeredValues[3] = values[3] + charSpacers + adzInfo.getAdBidCount();
 					} else {
-						mergeredValues[3] = values[3] + charSpacers;
+						mergeredValues[3] = values[3] + NULL + charSpacers;
 					}
 	            	
 	            	List<Integer> viewTypes = adzInfo.getViewTypeList();
 	            	if (viewTypes.isEmpty()) {
-	            		mergeredValues[4] = values[4] + charSpacers;
+	            		mergeredValues[4] = values[4] + NULL + charSpacers;
 					} else {
 						for (Integer integer : viewTypes) {
 							
@@ -320,7 +299,7 @@ public class SocketData {
 	            	
 	            	List<Integer> excludedFilters = adzInfo.getExcludedFilterList();
 	            	if (excludedFilters.isEmpty()) {
-	            		mergeredValues[5] = values[5] + charSpacers;
+	            		mergeredValues[5] = values[5] + NULL + charSpacers;
 					} else {
 						for (Integer integer1 : excludedFilters) {
 							adzInfoExcludedFilterBuilder.append(integer1).append(charSpacers);
@@ -333,20 +312,20 @@ public class SocketData {
 						
 	            		mergeredValues[6] = values[6] + charSpacers + adzInfo.getMinCpmPrice();
 					} else {
-						mergeredValues[6] = values[6] + charSpacers;
+						mergeredValues[6] = values[6] + NULL + charSpacers;
 					}
 	            	
 	            	
 	            	if (adzInfo.hasViewScreen()) {
 	            		mergeredValues[7] = values[7] + charSpacers + adzInfo.getViewScreen().name();
 					} else {
-						mergeredValues[7] = values[7] + charSpacers;
+						mergeredValues[7] = values[7] + NULL + charSpacers;
 					}
 	            	
 	            	if (adzInfo.hasPageSessionAdIdx()) {
 	            		mergeredValues[8] = values[8] + charSpacers + adzInfo.getPageSessionAdIdx();
 					} else {
-						mergeredValues[8] = values[8] + charSpacers;
+						mergeredValues[8] = values[8] + NULL + charSpacers;
 					}
 				}
             	
@@ -364,14 +343,14 @@ public class SocketData {
             if (req.hasPageSessionId()) {
 				sBuilder.append(req.getPageSessionId()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             
             List<Integer> excludedSensitiveCategorys = req.getExcludedSensitiveCategoryList();
             
             if (excludedSensitiveCategorys.isEmpty()) {
-            	sBuilder.append(spacers);
+            	sBuilder.append(NULL).append(spacers);
 			} else {
 				for (Integer integer : excludedSensitiveCategorys) {
 					sBuilder.append(integer).append(charSpacers);
@@ -381,12 +360,12 @@ public class SocketData {
             
             List<Integer> excludedAdCategorys = req.getExcludedAdCategoryList();
             if (excludedAdCategorys.isEmpty()) {
-            	sBuilder.append(spacers);
+            	sBuilder.append(NULL).append(spacers);
 			} else {
 				for (Integer integer : excludedAdCategorys) {
 					sBuilder.append(integer).append(charSpacers);
 				}
-				sBuilder.append(getSubString(sBuilder)).append(spacers);
+				getSubString(sBuilder).append(spacers);
 			}
             
             sBuilder.append(req.getContentCategoriesCount()).append(spacers);
@@ -395,20 +374,20 @@ public class SocketData {
             StringBuilder contentCategoryIdBuilder = new StringBuilder();
             StringBuilder contentCategoryConfidenceLevelBuilder = new StringBuilder();
             if (contentCategories.isEmpty()) {
-				sBuilder.append(spacers);
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			} else {
 				for (ContentCategory contentCategory : contentCategories) {
 	            	
 	            	if (contentCategory.hasId()) {
 						contentCategoryIdBuilder.append(contentCategory.getId()).append(charSpacers);
 					} else {
-						contentCategoryIdBuilder.append(charSpacers);
+						contentCategoryIdBuilder.append(NULL).append(charSpacers);
 					}
 	            	if (contentCategory.hasConfidenceLevel()) {
 						contentCategoryConfidenceLevelBuilder.append(contentCategory.getConfidenceLevel()).append(charSpacers);
 					} else {
-						contentCategoryIdBuilder.append(charSpacers);
+						contentCategoryIdBuilder.append(NULL).append(charSpacers);
 					}
 				}
 				sBuilder.append(getSubString(contentCategoryIdBuilder)).append(spacers);
@@ -420,18 +399,25 @@ public class SocketData {
             if (mobile.hasIsApp()) {
 				sBuilder.append(mobile.getIsApp()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (mobile.hasAdNum()) {
 				sBuilder.append(mobile.getAdNum()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
+            
+            if (mobile.hasIsFullscreen()) {
+				sBuilder.append(mobile.getIsFullscreen()).append(spacers);
+			} else {
+				sBuilder.append(NULL).append(spacers);
+			}
+            
             
             ProtocolStringList mobileAdKeywords = mobile.getAdKeywordList();
             if (mobileAdKeywords.isEmpty()) {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			} else {
 				StringBuilder adKeywordsBuilder = new StringBuilder();
 				for (String string : mobileAdKeywords) {
@@ -443,80 +429,82 @@ public class SocketData {
             if (mobile.hasPackageName()) {
 				sBuilder.append(mobile.getPackageName()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             Device device = mobile.getDevice();
             if (device.hasPlatform()) {
 				sBuilder.append(device.getPlatform()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (device.hasBrand()) {
 				sBuilder.append(device.getBrand()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (device.hasModel()) {
 				sBuilder.append(device.getModel()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (device.hasOs()) {
 				sBuilder.append(device.getOs()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (device.hasOsVersion()) {
 				sBuilder.append(device.getOsVersion()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
            
             if (device.hasNetwork()) {
 				sBuilder.append(device.getNetwork()).append(spacers); 
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (device.hasOperator()) {
 				sBuilder.append(device.getOperator()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (device.hasLongitude()) {
+            	System.out.println(device.getLongitude());
+            	System.out.println(device.getLongitude().equals(""));
 				sBuilder.append(device.getLongitude()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (device.hasLatitude()) {
 				sBuilder.append(device.getLatitude()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (device.hasDeviceSize()) {
             	sBuilder.append(device.getDeviceSize()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (device.hasDevicePixelRatio()) {
 				sBuilder.append(device.getDevicePixelRatio()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             if (device.hasDeviceId()) {
 				sBuilder.append(device.getDeviceId()).append(spacers);
 			} else {
-				sBuilder.append(spacers);
+				sBuilder.append(NULL).append(spacers);
 			}
             
             
@@ -524,7 +512,7 @@ public class SocketData {
             	Video video = req.getVideo();
             	List<VideoFormat> videoFormatList = video.getVideoFormatList();
             	if (videoFormatList.isEmpty()) {
-					sBuilder.append(spacers);
+					sBuilder.append(NULL).append(spacers);
 				} else {
 					for (VideoFormat videoFormat : videoFormatList) {
 						sBuilder.append(videoFormat.name()).append(charSpacers);
@@ -533,23 +521,23 @@ public class SocketData {
 				}
             	
             	if (video.hasContent()) {
-					sBuilder.append(video.getContent());
+					sBuilder.append(video.getContent()).append(spacers);
 					Content content = video.getContent();
 					if (content.hasTitle()) {
 						sBuilder.append(content.getTitle()).append(spacers);
 					} else {
-						sBuilder.append(spacers);
+						sBuilder.append(NULL).append(spacers);
 					}
 					
 					if (content.hasDuration()) {
 						sBuilder.append(content.getDuration()).append(spacers);
 					} else {
-						sBuilder.append(spacers);
+						sBuilder.append(NULL).append(spacers);
 					}
 					
 					ProtocolStringList keywords = content.getKeywordsList();
 					if (keywords.isEmpty()) {
-						sBuilder.append(spacers);
+						sBuilder.append(NULL).append(spacers);
 					} else {
 						for (String string : keywords) {
 							sBuilder.append(string).append(charSpacers);
@@ -560,60 +548,62 @@ public class SocketData {
 					
 					
 				} else {
-					sBuilder.append(spacers).append(spacers).append(spacers).append(spacers);
+					sBuilder.append(NULL).append(spacers).append(NULL).append(spacers).append(NULL)
+					.append(spacers).append(NULL).append(spacers);
 				}
             	
             	
             	if (video.hasVideoadStartDelay()) {
 					sBuilder.append(video.getVideoadStartDelay()).append(spacers);
 				} else {
-					sBuilder.append(spacers);
+					sBuilder.append(NULL).append(spacers);
 				}
             	
             	if (video.hasVideoadSectionStartDelay()) {
 					
             		sBuilder.append(video.getVideoadSectionStartDelay()).append(spacers);
 				} else {
-					sBuilder.append(spacers);
+					sBuilder.append(NULL).append(spacers);
 				}
             	
             	if (video.hasMinAdDuration()) {
 					
             		sBuilder.append(video.getMinAdDuration()).append(spacers);
 				} else {
-					sBuilder.append(spacers);
+					sBuilder.append(NULL).append(spacers);
 				}
             	
             	if (video.hasMaxAdDuration()) {
 					sBuilder.append(video.getMaxAdDuration()).append(spacers);
 				} else {
-					sBuilder.append(spacers);
+					sBuilder.append(NULL).append(spacers);
 				}
             	
             	if (video.hasProtocol()) {
 					
             		sBuilder.append(video.getProtocol()).append(spacers);
 				} else {
-					sBuilder.append(spacers);
+					sBuilder.append(NULL).append(spacers);
 				}
 			} else {
-				sBuilder.append(spacers).append(spacers).append(spacers).append(spacers).append(spacers)
-					.append(spacers).append(spacers).append(spacers).append(spacers).append(spacers);
+				sBuilder.append(NULL).append(spacers).append(NULL).append(spacers).append(NULL).append(spacers).append(NULL).append(spacers).append(NULL).append(spacers)
+					.append(NULL).append(spacers).append(NULL).append(spacers).append(NULL).append(spacers).append(NULL).append(spacers).append(NULL).append(spacers);
 			}
            
             System.out.println(sBuilder.toString());
 //            System.out.println(sBuilder.toString().getBytes());
 //            HexDump.dump(sBuilder.toString().getBytes(), 0, System.out, 0);
             OutputStream out = socket.getOutputStream();
-            byte[] sbuilderBytes = sBuilder.toString().getBytes();
+//            byte[] sbuilderBytes = sBuilder.toString().getBytes();
             
             out.write(bytes);
-//            socket.close();
+
             count++;
 			}
+			socket.close();
         	System.out.println(new Date());
         	System.out.println(count);
-			socket.close();
+//			socket.close();
         } catch (IOException e) {
             logger.error("error is " + e.toString());
 //        } catch (InterruptedException e) {

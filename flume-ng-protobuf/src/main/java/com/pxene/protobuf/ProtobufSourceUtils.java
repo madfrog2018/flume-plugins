@@ -18,20 +18,12 @@
  */
 package com.pxene.protobuf;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.ProtocolStringList;
+import com.pxene.protobuf.TanxBidding.BidRequest.*;
+import com.pxene.protobuf.TanxBidding.BidRequest.Mobile.Device;
+import com.pxene.protobuf.TanxBidding.BidRequest.Video.Content;
+import com.pxene.protobuf.TanxBidding.BidRequest.Video.VideoFormat;
 import org.apache.flume.Event;
 import org.apache.flume.annotations.InterfaceAudience;
 import org.apache.flume.annotations.InterfaceStability;
@@ -41,16 +33,15 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.ProtocolStringList;
-import com.pxene.protobuf.TanxBidding.BidRequest.AdzInfo;
-import com.pxene.protobuf.TanxBidding.BidRequest.ContentCategory;
-import com.pxene.protobuf.TanxBidding.BidRequest.Mobile;
-import com.pxene.protobuf.TanxBidding.BidRequest.Mobile.Device;
-import com.pxene.protobuf.TanxBidding.BidRequest.UserAttribute;
-import com.pxene.protobuf.TanxBidding.BidRequest.Video;
-import com.pxene.protobuf.TanxBidding.BidRequest.Video.Content;
-import com.pxene.protobuf.TanxBidding.BidRequest.Video.VideoFormat;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @InterfaceAudience.Private
 @InterfaceStability.Evolving
@@ -823,8 +814,7 @@ public class ProtobufSourceUtils {
 			}
             
             if (device.hasLongitude()) {
-            	System.out.println(device.getLongitude());
-            	System.out.println(device.getLongitude().equals(""));
+
 				sBuilder.append(device.getLongitude()).append(spacers);
 			} else {
 				sBuilder.append(NULL).append(spacers);

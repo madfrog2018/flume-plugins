@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.flume.sink.hbase;
+package com.pxene.hbase;
 
 import com.google.common.collect.Lists;
 import org.apache.flume.Context;
@@ -78,9 +78,11 @@ public class TanxLogHbaseEventSerializer implements HbaseEventSerializer {
     public List<Row> getActions() {
 
         List<Row> actions = Lists.newArrayList();
-        byte[] rowKey = payload.get(1); //bid作为rowkey；
+        String rowKeyStr = new String(payload.get(1)) + new String(payload.get(0));
+        logger.info("rowkey str is " + rowKeyStr);
+        byte[] rowKey =  rowKeyStr.getBytes(); //bid作为rowkey；
         Put put = new Put(rowKey);
-        put.add(cf, colNames.get(0), payload.get(0));
+//        put.add(cf, colNames.get(0), payload.get(0));
         logger.info("colNames size is " + colNames.size() + ", payload size is " + payload.size());
         for (int i = 2; i < payload.size(); i++) {
             put.add(cf, colNames.get(i), payload.get(i));

@@ -1,10 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.pxene</groupId>
+    <artifactId>flume-plugins</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
 
-  <groupId>com.pxene</groupId>
+  <modelVersion>4.0.0</modelVersion>
   <artifactId>flume-ng-protobuf</artifactId>
-  <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>flume-ng-protobuf</name>
@@ -27,11 +30,11 @@
       <artifactId>flume-ng-core</artifactId>
       <version>${flume.version}</version>
     </dependency>
-    <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-      <version>2.6.1</version>
-    </dependency>
+	<dependency>
+	  <groupId>com.google.protobuf</groupId>
+	  <artifactId>protobuf-java</artifactId>
+	  <version>2.6.1</version>
+	</dependency>
   </dependencies>
   <build>
     <finalName>flume-ng-protobuf</finalName>

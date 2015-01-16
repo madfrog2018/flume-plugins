@@ -27,7 +27,7 @@ public class SocketData {
 		int count = 1;
 
         try {
-			Socket socket = new Socket("192.168.2.7", 5140);
+			Socket socket = new Socket("192.168.2.2", 5140);
         	for (int i = 0; i < 3; i++) {
             File file = new File("D:\\git\\flume-plugins\\flume-ng-protobuf\\test.txt");
             @SuppressWarnings("resource")

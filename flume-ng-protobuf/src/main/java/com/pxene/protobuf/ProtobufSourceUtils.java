@@ -24,6 +24,7 @@ import com.pxene.protobuf.TanxBidding.BidRequest.*;
 import com.pxene.protobuf.TanxBidding.BidRequest.Mobile.Device;
 import com.pxene.protobuf.TanxBidding.BidRequest.Video.Content;
 import com.pxene.protobuf.TanxBidding.BidRequest.Video.VideoFormat;
+
 import org.apache.flume.Event;
 import org.apache.flume.annotations.InterfaceAudience;
 import org.apache.flume.annotations.InterfaceStability;
@@ -320,7 +321,7 @@ public class ProtobufSourceUtils {
         int i = 0;
         long dateLong = 0l;
         try {
-        	logger.info("boss size is " + boss.size());
+        	logger.debug("boss size is " + boss.size());
             if (0 != boss.size()){
                 in.setBytes(0,boss.toByteArray());
                 boss = new ByteArrayOutputStream();
@@ -372,7 +373,8 @@ public class ProtobufSourceUtils {
         this.keepFields= keepFields;
     }
 
-    public Event buildMessage(long dateLong, byte[] reqBytes) throws InvalidProtocolBufferException {
+    @SuppressWarnings("static-access")
+	public Event buildMessage(long dateLong, byte[] reqBytes) throws InvalidProtocolBufferException {
 
 
 //        byte[] bytes = baos.toByteArray();

@@ -18,7 +18,13 @@
  */
 package com.pxene.protobuf;
 
-import com.google.protobuf.InvalidProtocolBufferException;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.io.HexDump;
 import org.apache.flume.Context;
 import org.apache.flume.CounterGroup;
 import org.apache.flume.Event;
@@ -29,15 +35,20 @@ import org.apache.flume.source.AbstractSource;
 import org.apache.flume.source.SyslogSourceConfigurationConstants;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.*;
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelFactory;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelPipeline;
+import org.jboss.netty.channel.ChannelPipelineFactory;
+import org.jboss.netty.channel.DefaultChannelPipeline;
+import org.jboss.netty.channel.ExceptionEvent;
+import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.SimpleChannelHandler;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetSocketAddress;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 /**
  * Created by young on 2015/1/15.
@@ -77,81 +88,42 @@ public class TanxTcpSource extends AbstractSource
                                     MessageEvent mEvent) {
         	logger.info("message received is start");
             ChannelBuffer buffer = (ChannelBuffer) mEvent.getMessage();
-            logger.info("channel buffer length is " + buffer.array().length);
-            byte[] dateTimeBytes = new byte[8];
-            byte[] dataBytes = new byte[4];
-            int dataLength = 0;
-            long dateLong = 0l;
-            
-            while (buffer.readable()) {
-                Event e = null;
-                try {
-                    if (0 == dataLength && 0l == dateLong) {
-
-                        buffer.readBytes(dataBytes, 0, 4);
-//						try {
-//							HexDump.dump(dataBytes, 0, System.out,
-//									0);
-//						} catch (Exception e2) {
-//							// TODO Auto-generated catch block
-//							e2.printStackTrace();
-//						}
-                        dataLength = ProtobufSourceUtils
-                                .byteArrayToInt(dataBytes);
-
-                        buffer.readBytes(dateTimeBytes, 0, 8);
-//						try {
-//							HexDump.dump(dateTimeBytes, 0, System.out,
-//									0);
-//						} catch (Exception e2) {
-//							// TODO Auto-generated catch block
-//							e2.printStackTrace();
-//						}
-                        dateLong = ProtobufSourceUtils
-                                .byteArrayToLong(dateTimeBytes);
-                        logger.info("the dataLength is " + dataLength);
-                        continue;
-                    } else {
-//                        byte b = buffer.readByte();
-//                        baos.write(b);
-//                        i++;
-//                        if (dataLength == i) {
-//                            logger.info("the buildMessage is over");
-//
-//                            e = ProtobufSourceUtils.buildMessage(dateLong,
-//                                    baos.toByteArray());
-//                            dataLength = 0;
-//                            dateLong = 0l;
-//                            i = 0;
-//                            baos.reset();
-//                        }
-                        byte[] data = new byte[dataLength];
-                        buffer.readBytes(data, 0,dataLength);
-                        e = ProtobufSourceUtils.buildMessage(dateLong, data);
-                        if (e == null) {
-                            continue;
-                        }
-                        try {
-                            getChannelProcessor().processEvent(e);
-                            logger.info("events success");
-                            counterGroup.incrementAndGet("events.success");
-                        } catch (org.apache.flume.ChannelException ex) {
-                            counterGroup.incrementAndGet("events.dropped");
-                            logger.error("Error writting to channel, event dropped", ex);
-                        }
-                        dataLength = 0;
-                        dateLong = 0l;
-                        logger.info("build message is over");
-                    }
-                    
-                    
-                } catch (InvalidProtocolBufferException e1) {
-                    logger.error("InvalidProtocolBufferException is "
-                            + e1.toString());
-                }
-                
-                logger.info("left byte length is " + buffer.array().length);
+            try {
+                HexDump.dump(buffer.array(), 0, System.out, 0);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+            byte[] dateTimeBytes = new byte[8];
+//            byte[] dataBytes = new byte[4];
+//            int dataLength = 0;
+            long dateLong = 0l;
+//            buffer.readBytes(dataBytes, 0, 4);
+//            dataLength = ProtobufSourceUtils.byteArrayToInt(dataBytes);
+            buffer.readBytes(dateTimeBytes, 0, 8);
+            dateLong = ProtobufSourceUtils.byteArrayToLong(dateTimeBytes);
+            logger.info("parse the dataLength is " + buffer.readableBytes());
+            Event e = null;
+            try {
+                byte[] data = new byte[buffer.readableBytes()];
+                buffer.readBytes(data, 0,buffer.readableBytes());
+                e = ProtobufSourceUtils.buildMessage(dateLong, data);
+                if (e != null) {
+                    try {
+                        getChannelProcessor().processEvent(e);
+                        logger.info("events success");
+                        counterGroup.incrementAndGet("events.success");
+                    } catch (org.apache.flume.ChannelException ex) {
+                        counterGroup.incrementAndGet("events.dropped");
+                        logger.error("Error writting to channel, event dropped", ex);
+                    }
+                    logger.info("build message is over");
+                }
+            } catch (InvalidProtocolBufferException e1) {
+                logger.error("InvalidProtocolBufferException is "
+                        + e1.toString());
+            }
+            buffer.clear();
+
         }
     }
 
@@ -162,7 +134,7 @@ public class TanxTcpSource extends AbstractSource
         ServerBootstrap serverBootstrap = new ServerBootstrap(factory);
         serverBootstrap.setOption("reuseAddress", true);//端口重用
         serverBootstrap.setOption("child.tcpNoDelay", true);//无延迟
-        serverBootstrap.setOption("child.receiveBufferSize", 2048*1000);//设置接收缓冲区大小
+        serverBootstrap.setOption("child.receiveBufferSize", 4096);//设置接收缓冲区大小
         serverBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
             @Override
             public ChannelPipeline getPipeline() {
@@ -171,7 +143,10 @@ public class TanxTcpSource extends AbstractSource
                 handler.setEventSize(eventSize);
                 handler.setFormater(formaterProp);
                 handler.setKeepFields(keepFields);
-//                pipeline.addLast("FrameDecode", );
+                logger.info("add Frame Decoder");
+//                pipeline.addLast("decoder", new LengthFieldBasedFrameDecoder(1024, 0, 4, 0, 4));
+                pipeline.addLast("FrameDecoder", new ProtobufFrameDecoder());
+                logger.info("add Frame Decoder after");
                 pipeline.addLast("handler", handler);
                 return pipeline;
             }

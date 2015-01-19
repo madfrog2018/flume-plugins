@@ -1,0 +1,50 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.pxene</groupId>
+  <artifactId>flume-plugins</artifactId>
+  <packaging>pom</packaging>
+  <version>1.0-SNAPSHOT</version>
+
+  <name>flume-plugins</name>
+  <url>http://maven.apache.org</url>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <flume.version>1.5.2</flume.version>
+  </properties>
+
+  <modules>
+    <module>flume-ng-hbase-plugins</module>
+    <module>flume-ng-protobuf</module>
+    <module>flume-ng-amax-hdfs</module>
+    <module>flume-ng-amax-hbase</module>
+  </modules>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flume</groupId>
+      <artifactId>flume-ng-core</artifactId>
+      <version>${flume.version}</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <finalName>flume-ng-protobuf</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.5</source>
+          <target>1.5</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

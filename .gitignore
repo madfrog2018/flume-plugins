@@ -2,3 +2,5 @@
 /flume-ng-hbase-plugins/.classpath
 /flume-ng-hbase-plugins/.project
 /flume-ng-hbase-plugins/*.iml
+/.settings
+/target

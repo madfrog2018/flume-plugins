@@ -16,15 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.pxene.protobuf;
+package com.pxene;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.io.HexDump;
 import org.apache.flume.Context;
 import org.apache.flume.CounterGroup;
 import org.apache.flume.Event;
@@ -57,7 +54,7 @@ public class TanxTcpSource extends AbstractSource
         implements EventDrivenSource, Configurable {
 
     private static final Logger logger = LoggerFactory
-            .getLogger(ProtobufSource.class);
+            .getLogger(TanxTcpSource.class);
     private int port;
     private String host = null;
     private Channel nettyChannel;
@@ -67,15 +64,15 @@ public class TanxTcpSource extends AbstractSource
     private Boolean keepFields;
 
     public class ProtobufHandler extends SimpleChannelHandler {
-        private ProtobufSourceUtils ProtobufSourceUtils = new ProtobufSourceUtils();
+        private TanxTcpSourceUtils TanxTcpSourceUtils = new TanxTcpSourceUtils();
         public void setEventSize(int eventSize) {
-            ProtobufSourceUtils.setEventSize(eventSize);
+            TanxTcpSourceUtils.setEventSize(eventSize);
         }
         public void setKeepFields(boolean keepFields) {
-            ProtobufSourceUtils.setKeepFields(keepFields);
+            TanxTcpSourceUtils.setKeepFields(keepFields);
         }
         public void setFormater(Map<String, String> prop) {
-            ProtobufSourceUtils.addFormats(prop);
+            TanxTcpSourceUtils.addFormats(prop);
         }
         public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
                 throws Exception {
@@ -88,25 +85,16 @@ public class TanxTcpSource extends AbstractSource
                                     MessageEvent mEvent) {
         	logger.info("message received is start");
             ChannelBuffer buffer = (ChannelBuffer) mEvent.getMessage();
-            try {
-                HexDump.dump(buffer.array(), 0, System.out, 0);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
             byte[] dateTimeBytes = new byte[8];
-//            byte[] dataBytes = new byte[4];
-//            int dataLength = 0;
             long dateLong = 0l;
-//            buffer.readBytes(dataBytes, 0, 4);
-//            dataLength = ProtobufSourceUtils.byteArrayToInt(dataBytes);
             buffer.readBytes(dateTimeBytes, 0, 8);
-            dateLong = ProtobufSourceUtils.byteArrayToLong(dateTimeBytes);
+            dateLong = TanxTcpSourceUtils.byteArrayToLong(dateTimeBytes);
             logger.info("parse the dataLength is " + buffer.readableBytes());
             Event e = null;
             try {
                 byte[] data = new byte[buffer.readableBytes()];
                 buffer.readBytes(data, 0,buffer.readableBytes());
-                e = ProtobufSourceUtils.buildMessage(dateLong, data);
+                e = TanxTcpSourceUtils.buildMessage(dateLong, data);
                 if (e != null) {
                     try {
                         getChannelProcessor().processEvent(e);
@@ -143,10 +131,7 @@ public class TanxTcpSource extends AbstractSource
                 handler.setEventSize(eventSize);
                 handler.setFormater(formaterProp);
                 handler.setKeepFields(keepFields);
-                logger.info("add Frame Decoder");
-//                pipeline.addLast("decoder", new LengthFieldBasedFrameDecoder(1024, 0, 4, 0, 4));
-                pipeline.addLast("FrameDecoder", new ProtobufFrameDecoder());
-                logger.info("add Frame Decoder after");
+                pipeline.addLast("FrameDecoder", new TanxFrameDecoder());
                 pipeline.addLast("handler", handler);
                 return pipeline;
             }
@@ -189,7 +174,7 @@ public class TanxTcpSource extends AbstractSource
                 SyslogSourceConfigurationConstants.CONFIG_PORT);
         port = context.getInteger(SyslogSourceConfigurationConstants.CONFIG_PORT);
         host = context.getString(SyslogSourceConfigurationConstants.CONFIG_HOST);
-        eventSize = context.getInteger("eventSize", ProtobufSourceUtils.DEFAULT_SIZE);
+        eventSize = context.getInteger("eventSize", TanxTcpSourceUtils.DEFAULT_SIZE);
         formaterProp = context.getSubProperties(
                 SyslogSourceConfigurationConstants.CONFIG_FORMAT_PREFIX);
         keepFields = context.getBoolean

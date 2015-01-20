@@ -380,6 +380,7 @@ public class AmaxTcpSourceUtils {
         stringBuilder.append(dateLong).append(spacers);
 
         JSONObject jsonObject = JSONObject.fromObject(reqBytes);
+		@SuppressWarnings("rawtypes")
 		Set keySet = jsonObject.keySet();
         String bcatStr = null;
         String badvStr = null;

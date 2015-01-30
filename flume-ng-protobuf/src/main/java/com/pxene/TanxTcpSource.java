@@ -83,17 +83,19 @@ public class TanxTcpSource extends AbstractSource
         @Override
         public void messageReceived(ChannelHandlerContext ctx,
                                     MessageEvent mEvent) {
-        	logger.info("message received is start");
+//        	logger.debug("message received is start");
             ChannelBuffer buffer = (ChannelBuffer) mEvent.getMessage();
             byte[] dateTimeBytes = new byte[8];
             long dateLong = 0l;
             buffer.readBytes(dateTimeBytes, 0, 8);
             dateLong = TanxTcpSourceUtils.byteArrayToLong(dateTimeBytes);
-            logger.info("parse the dataLength is " + buffer.readableBytes());
+            logger.debug("parse the dataLength is " + buffer.readableBytes());
+//            logger.info("received the message date is " + dateLong);
             Event e = null;
             try {
                 byte[] data = new byte[buffer.readableBytes()];
                 buffer.readBytes(data, 0,buffer.readableBytes());
+//                logger.debug("build message is over");
                 e = TanxTcpSourceUtils.buildMessage(dateLong, data);
                 if (e != null) {
                     try {
@@ -104,7 +106,7 @@ public class TanxTcpSource extends AbstractSource
                         counterGroup.incrementAndGet("events.dropped");
                         logger.error("Error writting to channel, event dropped", ex);
                     }
-                    logger.info("build message is over");
+                    
                 }
             } catch (InvalidProtocolBufferException e1) {
                 logger.error("InvalidProtocolBufferException is "

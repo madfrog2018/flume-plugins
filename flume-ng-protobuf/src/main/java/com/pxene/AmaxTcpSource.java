@@ -45,7 +45,6 @@ import org.jboss.netty.channel.SimpleChannelHandler;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.protobuf.InvalidProtocolBufferException;
 
 public class AmaxTcpSource extends AbstractSource
 			implements EventDrivenSource, Configurable {
@@ -80,34 +79,30 @@ public class AmaxTcpSource extends AbstractSource
 	        @Override
 	        public void messageReceived(ChannelHandlerContext ctx,
 	                                    MessageEvent mEvent) {
-	        	logger.info("message received is start");
+//	        	logger.info("message received is start");
 	            ChannelBuffer buffer = (ChannelBuffer) mEvent.getMessage();
 	            byte[] dateTimeBytes = new byte[8];
 	            long dateLong = 0l;
 	            buffer.readBytes(dateTimeBytes, 0, 8);
 	            dateLong = AmaxTcpSourceUtils.byteArrayToLong(dateTimeBytes);
-	            logger.info("parse the dataLength is " + buffer.readableBytes());
+	            logger.debug("parse the dataLength is " + buffer.readableBytes());
 	            Event e = null;
-	            try {
-	                byte[] data = new byte[buffer.readableBytes()];
-	                buffer.readBytes(data, 0,buffer.readableBytes());
-	                e = AmaxTcpSourceUtils.buildMessage(dateLong, data);
-	                if (e != null) {
-	                    try {
-	                        getChannelProcessor().processEvent(e);
-	                        logger.info("events success");
-	                        counterGroup.incrementAndGet("events.success");
-	                    } catch (org.apache.flume.ChannelException ex) {
-	                        counterGroup.incrementAndGet("events.dropped");
-	                        logger.error("Error writting to channel, event dropped", ex);
-	                    }
-	                    logger.info("build message is over");
-	                }
-	            } catch (InvalidProtocolBufferException e1) {
-	                logger.error("InvalidProtocolBufferException is "
-	                        + e1.toString());
-	            }
-	            buffer.clear();
+                byte[] data = new byte[buffer.readableBytes()];
+                buffer.readBytes(data, 0,buffer.readableBytes());
+//                logger.info("received the message date is " + dateLong);
+                e = AmaxTcpSourceUtils.buildMessage(dateLong, data);
+//                logger.debug("build message is over");
+                if (e != null) {
+                    try {
+                        getChannelProcessor().processEvent(e);
+                        logger.info("events success");
+                        counterGroup.incrementAndGet("events.success");
+                    } catch (org.apache.flume.ChannelException ex) {
+                        counterGroup.incrementAndGet("events.dropped");
+                        logger.error("Error writting to channel, event dropped", ex);
+                    }
+                }
+//	            buffer.clear();
 
 	        }
 	    }

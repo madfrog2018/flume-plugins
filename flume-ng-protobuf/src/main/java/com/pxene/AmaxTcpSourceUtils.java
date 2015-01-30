@@ -18,23 +18,16 @@
  */
 package com.pxene;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.pxene.TanxBidding.BidRequest.Mobile.Device;
-
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-
 import org.apache.flume.Event;
 import org.apache.flume.annotations.InterfaceAudience;
 import org.apache.flume.annotations.InterfaceStability;
 import org.apache.flume.event.EventBuilder;
 import org.apache.flume.source.SyslogSourceConfigurationConstants;
-import org.jboss.netty.buffer.ChannelBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -302,64 +295,6 @@ public class AmaxTcpSourceUtils {
         msgBody = null;
     }
 
-    // extract relevant syslog data needed for building Flume event
-    public Event extractEvent(ByteArrayOutputStream boss ,ChannelBuffer in) throws InvalidProtocolBufferException {
-
-    /* for protocol debugging
-    ByteBuffer bb = in.toByteBuffer();
-    int remaining = bb.remaining();
-    byte[] buf = new byte[remaining];
-    bb.get(buf);
-    HexDump.dump(buf, 0, System.out, 0);
-    */
-//        byte b = 0;
-        Event e = null;
-        byte[] dateTimeBytes = new byte[8];
-        byte[] dataBytes = new byte[4];
-        int dataLength = 0;
-        int i = 0;
-        long dateLong = 0l;
-        try {
-        	logger.debug("boss size is " + boss.size());
-            if (0 != boss.size()){
-                in.setBytes(0,boss.toByteArray());
-                boss = new ByteArrayOutputStream();
-            }
-            
-            while (in.readable()) {
-                if (0 == dataLength && 0l == dateLong) {
-            		in.readBytes(dateTimeBytes, 0, 8);
-                    dateLong = byteArrayToLong(dateTimeBytes);
-                    logger.info("dateLong is " + dateLong);
-                    in.readBytes(dataBytes, 0, 4);
-                    dataLength = byteArrayToInt(dataBytes);
-                    logger.info("data length is " + dataLength);
-                } else {
-                    byte b = in.readByte();
-                    baos.write(b);
-                    i++;
-                    if (dataLength == i) {
-                        e = buildMessage(dateLong, baos.toByteArray());
-                        dataLength = 0;
-                        dateLong = 0l;
-                        i = 0;
-                        baos.reset();
-                    }
-                }
-            }
-            if(0 != baos.size()){
-            	boss.write(baos.toByteArray());
-            }
-        }catch(InvalidProtocolBufferException e1){
-            logger.error(e1.getMessage());
-        } catch (IOException e1) {
-        	logger.error(e1.getMessage());
-		} finally {
-
-        }
-        return e;
-    }
-
     public Integer getEventSize() {
         return maxSize;
     }
@@ -372,14 +307,15 @@ public class AmaxTcpSourceUtils {
         this.keepFields= keepFields;
     }
 
-	public Event buildMessage(long dateLong, byte[] reqBytes) throws InvalidProtocolBufferException {
+	public Event buildMessage(long dateLong, byte[] reqBytes) {
 
-		String spacers = "|";
+		Character spacers = 0x03;
         Character charSpacers = 0x01;
+        Character NULL = 0x02;
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(dateLong).append(spacers);
 
-        JSONObject jsonObject = JSONObject.fromObject(reqBytes);
+        JSONObject jsonObject = JSONObject.fromObject(new String(reqBytes));
 		@SuppressWarnings("rawtypes")
 		Set keySet = jsonObject.keySet();
         String bcatStr = null;
@@ -427,11 +363,18 @@ public class AmaxTcpSourceUtils {
         if (bcatStr != null) {
 			
         	stringBuilder.append(spacers).append(bcatStr.substring(0, bcatStr.length() -1));
+		} else {
+			
+			stringBuilder.append(spacers).append(NULL);
 		}
         if (badvStr != null) {
 			
         	stringBuilder.append(spacers).append(badvStr.substring(0, badvStr.length() -1));
+		} else {
+			
+			stringBuilder.append(spacers).append(NULL);
 		}
+//        logger.debug("result string is " + stringBuilder.toString());
         return EventBuilder.withBody(stringBuilder.toString(), Charset.defaultCharset());
 
     }

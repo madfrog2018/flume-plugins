@@ -376,7 +376,7 @@ public class TanxTcpSourceUtils {
 	public Event buildMessage(long dateLong, byte[] reqBytes) throws InvalidProtocolBufferException {
 
             TanxBidding.BidRequest req = TanxBidding.BidRequest.parseFrom(reqBytes);
-            Character spacers = 0x03;
+            Character spacers = 0x09;
             Character charSpacers = 0x01;
             Character NULL = 0x02;
             StringBuilder sBuilder = new StringBuilder();
@@ -917,7 +917,7 @@ public class TanxTcpSourceUtils {
 			}
 
 
-//            logger.debug(sBuilder.toString());
+            logger.debug(sBuilder.toString());
         return EventBuilder.withBody(getSubString(sBuilder).toString(), Charset.defaultCharset());
 
     }

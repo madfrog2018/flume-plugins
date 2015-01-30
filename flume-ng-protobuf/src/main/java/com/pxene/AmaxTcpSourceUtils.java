@@ -309,7 +309,7 @@ public class AmaxTcpSourceUtils {
 
 	public Event buildMessage(long dateLong, byte[] reqBytes) {
 
-		Character spacers = 0x03;
+		Character spacers = 0x09;
         Character charSpacers = 0x01;
         Character NULL = 0x02;
         StringBuilder stringBuilder = new StringBuilder();
@@ -374,7 +374,7 @@ public class AmaxTcpSourceUtils {
 			
 			stringBuilder.append(spacers).append(NULL);
 		}
-//        logger.debug("result string is " + stringBuilder.toString());
+        logger.debug("result string is " + stringBuilder.toString());
         return EventBuilder.withBody(stringBuilder.toString(), Charset.defaultCharset());
 
     }

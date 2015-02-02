@@ -314,95 +314,76 @@ public class AmaxTcpSourceUtils {
         Character NULL = 0x02;
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(dateLong).append(spacers);
+        try {
+	
 
-        JSONObject jsonObject = JSONObject.fromObject(new String(reqBytes));
-		@SuppressWarnings("rawtypes")
-		Set keySet = jsonObject.keySet();
-        String bcatStr = null;
-        String badvStr = null;
-        List<Imp> lists = new ArrayList<Imp>();
-        App app = null;
-        Device device = null;
-        for (Object object : keySet) {
-			if (jsonObject.get(object) instanceof String) {
-				
-				stringBuilder.append(jsonObject.getString((String)object)).append(spacers);
-			}
-			
-			if (jsonObject.get(object) instanceof JSONArray) {
-				
-				JSONArray jArray = jsonObject.getJSONArray((String)object);
-				for (Object obj : jArray) {
+	        JSONObject jsonObject = JSONObject.fromObject(new String(reqBytes));
+			@SuppressWarnings("rawtypes")
+			Set keySet = jsonObject.keySet();
+	        String bcatStr = null;
+	        String badvStr = null;
+	        List<Imp> lists = new ArrayList<Imp>();
+	        App app = null;
+	        Device device = null;
+	        for (Object object : keySet) {
+				if (jsonObject.get(object) instanceof String) {
 					
-		        	if (object.toString().equals("bcat")) {
+					stringBuilder.append(jsonObject.getString((String)object)).append(spacers);
+				}
+				
+				if (jsonObject.get(object) instanceof JSONArray) {
+					
+					JSONArray jArray = jsonObject.getJSONArray((String)object);
+					for (Object obj : jArray) {
 						
-		        		bcatStr += ((String)obj + charSpacers);
-					} else if (object.toString().equals("badv")) {
-						
-		        		badvStr += ((String)obj + charSpacers);
-					} else {
-						
-						Imp impClass = (Imp) JSONObject.toBean((JSONObject)obj, Imp.class);
-						lists.add(impClass);
+			        	if (object.toString().equals("bcat")) {
+							
+			        		bcatStr += ((String)obj + charSpacers);
+						} else if (object.toString().equals("badv")) {
+							
+			        		badvStr += ((String)obj + charSpacers);
+						} else {
+							
+							Imp impClass = (Imp) JSONObject.toBean((JSONObject)obj, Imp.class);
+							lists.add(impClass);
+						}
 					}
 				}
-			}
-			
-			if (object.toString().equals("app")) {
 				
-				app = (App) JSONObject.toBean(JSONObject.fromObject(jsonObject.get(object)), App.class);
-			}
-			
-			if (object.toString().equals("device")) {
+				if (object.toString().equals("app")) {
+					
+					app = (App) JSONObject.toBean(JSONObject.fromObject(jsonObject.get(object)), App.class);
+				}
 				
-				device = (Device) JSONObject.toBean(JSONObject.fromObject(jsonObject.get(object)), Device.class);
+				if (object.toString().equals("device")) {
+					
+					device = (Device) JSONObject.toBean(JSONObject.fromObject(jsonObject.get(object)), Device.class);
+				}
 			}
-		}
-        //目前该列表中只有一个元素，简化处理。
-        stringBuilder.append(lists.get(0).toString()).append(spacers).append(app.toString()).append(spacers).append(device.toString());
-        if (bcatStr != null) {
-			
-        	stringBuilder.append(spacers).append(bcatStr.substring(0, bcatStr.length() -1));
-		} else {
-			
-			stringBuilder.append(spacers).append(NULL);
-		}
-        if (badvStr != null) {
-			
-        	stringBuilder.append(spacers).append(badvStr.substring(0, badvStr.length() -1));
-		} else {
-			
-			stringBuilder.append(spacers).append(NULL);
-		}
-        logger.debug("result string is " + stringBuilder.toString());
-        return EventBuilder.withBody(stringBuilder.toString(), Charset.defaultCharset());
-
-    }
-    	
-    
-    public StringBuilder getSubString(StringBuilder sb){
-    	
-    	if (sb == null) {
-			return null;
-		}
-    	
-    	String subString = sb.toString().substring(0, sb.length()-1);
-    	sb.delete(0, sb.length()).append(subString);
-    	return sb;
-    }
-
-    public byte[] getDataFromByteArray(byte[] bt, int start, int length) {
-
-        baos.reset();
-        int end = start + length;
-        for (int i = start; i < end; i++) {
-
-            baos.write(bt[i]);
+	        //目前该列表中只有一个元素，简化处理。
+	        stringBuilder.append(lists.get(0).toString()).append(spacers).append(app.toString()).append(spacers).append(device.toString());
+	        if (bcatStr != null) {
+				
+	        	stringBuilder.append(spacers).append(bcatStr.substring(0, bcatStr.length() -1));
+			} else {
+				
+				stringBuilder.append(spacers).append(NULL);
+			}
+	        if (badvStr != null) {
+				
+	        	stringBuilder.append(spacers).append(badvStr.substring(0, badvStr.length() -1));
+			} else {
+				
+				stringBuilder.append(spacers).append(NULL);
+			}
+	        logger.debug("result string is " + stringBuilder.toString());
+	        return EventBuilder.withBody(stringBuilder.toString(), Charset.defaultCharset());
+        } catch (Exception e) {
+        	logger.error("parse json object error: " + e.getMessage());
         }
-
-        return baos.toByteArray();
+		return null;
     }
-
+    
     /**
      * 将8字节的byte数组转成一个long值
      * @param byteArray

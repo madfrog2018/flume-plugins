@@ -23,7 +23,7 @@ import java.util.List;
 
 public class App {
 	
-	private static final String spacers = "|";
+	private static final Character spacers = 0x09;
     private static final Character charSpacers= 0x01;
     private static final Character NULL = 0x02;
 	private String aid;

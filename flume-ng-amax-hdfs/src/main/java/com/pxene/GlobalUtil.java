@@ -92,8 +92,9 @@ public class GlobalUtil {
 
         byte[] dataBytes = new byte[datalength];
         getBytes(buffer, 12, dataBytes, 0, datalength);
-        String spacers = "|";
+        Character spacers = 0x09;
         Character charSpacers= 0x01;
+        Character NULL = 0x02;
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(dateLong).append(spacers);
         JSONObject jsonObject = JSONObject.fromObject(new String(dataBytes, 0,
@@ -145,11 +146,15 @@ public class GlobalUtil {
         if (bcatStr != null) {
 
             stringBuilder.append(spacers).append(bcatStr.substring(0, bcatStr.length() -1));
-        }
+        } else {
+        	stringBuilder.append(spacers).append(NULL);
+		}
         if (badvStr != null) {
 
             stringBuilder.append(spacers).append(badvStr.substring(0, badvStr.length() -1));
-        }
+        } else {
+        	stringBuilder.append(spacers).append(NULL);
+		}
         logger.info(stringBuilder.toString());
         return EventBuilder.withBody(stringBuilder.toString().getBytes(),
                 toStringMap(avroEvent.getHeaders()));
@@ -194,7 +199,7 @@ public class GlobalUtil {
         byte[] dataBytes = new byte[datalength];
         getBytes(buffer, 12, dataBytes, 0, datalength);
         TanxBidding.BidRequest req = TanxBidding.BidRequest.parseFrom(dataBytes);
-        String spacers = "|";
+        Character spacers = 0x09;
         Character charSpacers = 0x01;
         Character NULL = 0x02;
         StringBuilder sBuilder = new StringBuilder();

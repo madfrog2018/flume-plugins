@@ -4,3 +4,4 @@
 /flume-ng-hbase-plugins/*.iml
 /.settings
 /target
+/*.iml

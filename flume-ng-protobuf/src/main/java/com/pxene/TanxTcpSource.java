@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +56,7 @@ public class TanxTcpSource extends AbstractSource
     private CounterGroup counterGroup = new CounterGroup();
     private Boolean keepFields;
 
-    public class ProtobufHandler extends SimpleChannelHandler {
+    public class TanxLogHandler extends SimpleChannelHandler {
         private TanxTcpSourceUtils TanxTcpSourceUtils = new TanxTcpSourceUtils();
         public void setEventSize(int eventSize) {
             TanxTcpSourceUtils.setEventSize(eventSize);
@@ -77,22 +78,27 @@ public class TanxTcpSource extends AbstractSource
                                     MessageEvent mEvent) {
 //        	logger.debug("message received is start");
             ChannelBuffer buffer = (ChannelBuffer) mEvent.getMessage();
-            byte[] dateTimeBytes = new byte[8];
-            long dateLong = 0l;
-            buffer.readBytes(dateTimeBytes, 0, 8);
-            dateLong = TanxTcpSourceUtils.byteArrayToLong(dateTimeBytes);
-            logger.debug("parse the dataLength is " + buffer.readableBytes());
+//            byte[] dateTimeBytes = new byte[8];
+//            long dateLong = 0l;
+//            buffer.readBytes(dateTimeBytes, 0, 8);
+//            dateLong = TanxTcpSourceUtils.byteArrayToLong(dateTimeBytes);
+//            logger.debug("parse the dataLength is " + buffer.readableBytes());
 //            logger.info("received the message date is " + dateLong);
+            long dateLong = buffer.readLong();
+            logger.info("received the message date is " + dateLong);
+            logger.debug("parse the dataLength is " + buffer.readableBytes());
             Event e = null;
             try {
-                byte[] data = new byte[buffer.readableBytes()];
-                buffer.readBytes(data, 0,buffer.readableBytes());
-//                logger.debug("build message is over");
-                e = TanxTcpSourceUtils.buildMessage(dateLong, data);
+                ByteBuffer byteBuffer = ByteBuffer.allocate(buffer.readableBytes());
+                buffer.readBytes(byteBuffer);
+//                byte[] data = new byte[buffer.readableBytes()];
+//                buffer.readBytes(data, 0,buffer.readableBytes());
+                logger.debug("build message is over");
+                e = TanxTcpSourceUtils.buildMessage(dateLong, byteBuffer.array());
                 if (e != null) {
                     try {
                         getChannelProcessor().processEvent(e);
-                        logger.info("events success");
+                        logger.debug("events success");
                         counterGroup.incrementAndGet("events.success");
                     } catch (org.apache.flume.ChannelException ex) {
                         counterGroup.incrementAndGet("events.dropped");
@@ -104,8 +110,6 @@ public class TanxTcpSource extends AbstractSource
                 logger.error("InvalidProtocolBufferException is "
                         + e1.toString());
             }
-            buffer.clear();
-
         }
     }
 
@@ -114,14 +118,14 @@ public class TanxTcpSource extends AbstractSource
         ChannelFactory factory = new NioServerSocketChannelFactory(
                 Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
         ServerBootstrap serverBootstrap = new ServerBootstrap(factory);
-        serverBootstrap.setOption("reuseAddress", true);//端口重用
-        serverBootstrap.setOption("child.tcpNoDelay", true);//无延迟
+//        serverBootstrap.setOption("reuseAddress", true);//端口重用
+//        serverBootstrap.setOption("child.tcpNoDelay", true);//无延迟
         serverBootstrap.setOption("child.receiveBufferSize", 4096);//设置接收缓冲区大小
         serverBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
             @Override
             public ChannelPipeline getPipeline() {
                 ChannelPipeline pipeline = new DefaultChannelPipeline();
-                ProtobufHandler handler = new ProtobufHandler();
+                TanxLogHandler handler = new TanxLogHandler();
                 handler.setEventSize(eventSize);
                 handler.setFormater(formaterProp);
                 handler.setKeepFields(keepFields);

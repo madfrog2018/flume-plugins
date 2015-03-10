@@ -16,10 +16,8 @@
   </properties>
 
   <modules>
-    <module>flume-ng-hbase-plugins</module>
     <module>flume-ng-protobuf</module>
     <module>flume-ng-amax-hdfs</module>
-    <module>flume-ng-amax-hbase</module>
   </modules>
   <dependencies>
     <dependency>

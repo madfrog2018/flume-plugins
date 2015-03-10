@@ -18,11 +18,6 @@
  */
 package com.pxene;
 
-import java.net.InetSocketAddress;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.flume.Context;
 import org.apache.flume.CounterGroup;
 import org.apache.flume.Event;
@@ -33,18 +28,16 @@ import org.apache.flume.source.AbstractSource;
 import org.apache.flume.source.SyslogSourceConfigurationConstants;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFactory;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.DefaultChannelPipeline;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
+import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class AmaxTcpSource extends AbstractSource
 			implements EventDrivenSource, Configurable {
@@ -59,7 +52,7 @@ public class AmaxTcpSource extends AbstractSource
 	    private CounterGroup counterGroup = new CounterGroup();
 	    private Boolean keepFields;
 
-	    public class ProtobufHandler extends SimpleChannelHandler {
+	    public class AmaxLogHandler extends SimpleChannelHandler {
 	        private AmaxTcpSourceUtils AmaxTcpSourceUtils = new AmaxTcpSourceUtils();
 	        public void setEventSize(int eventSize) {
 	            AmaxTcpSourceUtils.setEventSize(eventSize);
@@ -81,29 +74,32 @@ public class AmaxTcpSource extends AbstractSource
 	                                    MessageEvent mEvent) {
 //	        	logger.info("message received is start");
 	            ChannelBuffer buffer = (ChannelBuffer) mEvent.getMessage();
-	            byte[] dateTimeBytes = new byte[8];
-	            long dateLong = 0l;
-	            buffer.readBytes(dateTimeBytes, 0, 8);
-	            dateLong = AmaxTcpSourceUtils.byteArrayToLong(dateTimeBytes);
-	            logger.debug("parse the dataLength is " + buffer.readableBytes());
-	            Event e = null;
-                byte[] data = new byte[buffer.readableBytes()];
-                buffer.readBytes(data, 0,buffer.readableBytes());
+//	            byte[] dateTimeBytes = new byte[8];
+//	            long dateLong = 0l;
+//	            buffer.readBytes(dateTimeBytes, 0, 8);
+//	            dateLong = AmaxTcpSourceUtils.byteArrayToLong(dateTimeBytes);
+//	            logger.debug("parse the dataLength is " + buffer.readableBytes());
+                long dateLong = buffer.readLong();
+                logger.debug("recieve date long is" + dateLong);
 //                logger.info("received the message date is " + dateLong);
-                e = AmaxTcpSourceUtils.buildMessage(dateLong, data);
-//                logger.debug("build message is over");
+	            Event e = null;
+//                byte[] data = new byte[buffer.readableBytes()];
+//                buffer.readBytes(data, 0,buffer.readableBytes());
+                logger.debug("parse the dataLength is " + buffer.readableBytes());
+                ByteBuffer byteBuffer = ByteBuffer.allocate(buffer.readableBytes());
+                buffer.readBytes(byteBuffer);
+                e = AmaxTcpSourceUtils.buildMessage(dateLong, byteBuffer.array());
+                logger.debug("build message is over");
                 if (e != null) {
                     try {
                         getChannelProcessor().processEvent(e);
-                        logger.info("events success");
+                        logger.debug("events success");
                         counterGroup.incrementAndGet("events.success");
                     } catch (org.apache.flume.ChannelException ex) {
                         counterGroup.incrementAndGet("events.dropped");
                         logger.error("Error writting to channel, event dropped", ex);
                     }
                 }
-//	            buffer.clear();
-
 	        }
 	    }
 
@@ -112,14 +108,14 @@ public class AmaxTcpSource extends AbstractSource
 	        ChannelFactory factory = new NioServerSocketChannelFactory(
 	                Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
 	        ServerBootstrap serverBootstrap = new ServerBootstrap(factory);
-	        serverBootstrap.setOption("reuseAddress", true);//端口重用
-	        serverBootstrap.setOption("child.tcpNoDelay", true);//无延迟
-	        serverBootstrap.setOption("child.receiveBufferSize", 4096);//设置接收缓冲区大小
+//	        serverBootstrap.setOption("reuseAddress", true);//端口重用
+//	        serverBootstrap.setOption("child.tcpNoDelay", true);//无延迟
+	        serverBootstrap.setOption("child.receiveBufferSize", 65536);//设置接收缓冲区大小
 	        serverBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
 	            @Override
 	            public ChannelPipeline getPipeline() {
 	                ChannelPipeline pipeline = new DefaultChannelPipeline();
-	                ProtobufHandler handler = new ProtobufHandler();
+	                AmaxLogHandler handler = new AmaxLogHandler();
 	                handler.setEventSize(eventSize);
 	                handler.setFormater(formaterProp);
 	                handler.setKeepFields(keepFields);

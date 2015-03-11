@@ -20,7 +20,7 @@ package com.pxene;
 
 import java.util.List;
 
-public class Device {
+public class AmaxLogDevice {
 
 	private static final Character spacers = 0x09;
     private static final Character charSpacers= 0x01;

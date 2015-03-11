@@ -14,8 +14,9 @@
   <url>http://maven.apache.org</url>
 
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <flume.version>1.5.2</flume.version>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <flume.version>1.5.2</flume.version>
+      <jackson.version>2.5.0</jackson.version>
   </properties>
 
   <dependencies>
@@ -41,6 +42,21 @@
 	  <artifactId>protobuf-java</artifactId>
 	  <version>2.6.1</version>
 	 </dependency>
+      <dependency>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-annotations</artifactId>
+          <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-core</artifactId>
+          <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+          <version>${jackson.version}</version>
+      </dependency>
   </dependencies>
   <build>
     <finalName>flume-ng-protobuf</finalName>

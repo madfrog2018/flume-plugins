@@ -18,6 +18,9 @@
  */
 package com.pxene;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.flume.Event;
@@ -27,7 +30,9 @@ import org.apache.flume.event.EventBuilder;
 import org.apache.flume.source.SyslogSourceConfigurationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -44,7 +49,8 @@ public class AmaxTcpSourceUtils {
     final public static String SYSLOG_TIMESTAMP_FORMAT_RFC5424_3 = "yyyy-MM-dd'T'HH:mm:ssZ";
     final public static String SYSLOG_TIMESTAMP_FORMAT_RFC5424_4 = "yyyy-MM-dd'T'HH:mm:ss";
     final public static String SYSLOG_TIMESTAMP_FORMAT_RFC3164_1 = "yyyyMMM d HH:mm:ss";
-
+    private static ObjectMapper mapper = new ObjectMapper();
+    private static JsonFactory jsonFactory = mapper.getFactory();
     final public static String SYSLOG_MSG_RFC5424_0 =
             "(?:\\<\\d{1,3}\\>\\d?\\s?)" + // priority
       /* yyyy-MM-dd'T'HH:mm:ss.SZ or yyyy-MM-dd'T'HH:mm:ss.S+hh:mm or - (null stamp) */
@@ -307,7 +313,64 @@ public class AmaxTcpSourceUtils {
         this.keepFields= keepFields;
     }
 
-	public Event buildMessage(long dateLong, byte[] reqBytes) {
+    public Event parseMessage(long dateLong, byte[] reqBytes) {
+
+        Character charSpacers = 0x01;
+        Character NULL = 0x02;
+        Character spacers = 0x09;
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(dateLong).append(spacers);
+        try {
+            JsonParser jsonParser = jsonFactory.createParser(reqBytes);
+            AmaxMessage logMessage = mapper.readValue(jsonParser, AmaxMessage.class);
+//            logger.debug("imp is " + logMessage.getImp()[0].toString().split
+//                    (String.valueOf(spacers)).length);
+//            logger.debug("app is" + logMessage.getApp().toString().split
+//                    (String.valueOf(spacers)).length);
+//            logger.debug("device is" + logMessage.getDevice().toString()
+//                    .split(String.valueOf(spacers)).length);
+            stringBuilder.append(logMessage.getId()).append(spacers)
+                    .append(logMessage.getImp()[0].toString())
+                    .append(spacers).append(logMessage.getApp().toString())
+                    .append(spacers).append(logMessage.getDevice().toString()
+            ).append(spacers);
+            String[] bcats = logMessage.getBcat();
+            if (bcats != null) {
+
+                StringBuilder sBuilder = new StringBuilder();
+                for (String bcat : bcats) {
+                    sBuilder.append(bcat).append(charSpacers);
+                }
+                stringBuilder.append(sBuilder.substring(0, sBuilder.length() -1))
+                        .append(spacers);
+            } else {
+                stringBuilder.append(NULL).append(spacers);
+            }
+
+            String[] badvs = logMessage.getBadv();
+            if (badvs != null) {
+                StringBuilder baBuilder = new StringBuilder();
+                for (String badv : badvs) {
+                    baBuilder.append(badv).append(charSpacers);
+                }
+                stringBuilder.append(baBuilder.substring(0, baBuilder
+                        .length() -1));
+            } else {
+                stringBuilder.append(NULL);
+            }
+            logger.debug("parse message result is" + stringBuilder.toString());
+//            logger.debug("result length is " + stringBuilder.toString().split
+//                    (String.valueOf(spacers)).length);
+            return EventBuilder.withBody(stringBuilder.toString(), Charset
+                    .defaultCharset());
+        } catch (IOException e) {
+//            e.printStackTrace();
+            logger.error("error is " + e.fillInStackTrace().getMessage());
+        }
+        return null;
+    }
+
+    public Event buildMessage(long dateLong, byte[] reqBytes) {
 
 		Character spacers = 0x09;
         Character charSpacers = 0x01;
@@ -315,7 +378,7 @@ public class AmaxTcpSourceUtils {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(dateLong).append(spacers);
         try {
-	
+
 
 	        JSONObject jsonObject = JSONObject.fromObject(new String(reqBytes));
 			@SuppressWarnings("rawtypes")
@@ -323,57 +386,57 @@ public class AmaxTcpSourceUtils {
 	        String bcatStr = null;
 	        String badvStr = null;
 	        List<Imp> lists = new ArrayList<Imp>();
-	        App app = null;
-	        Device device = null;
+	        AmaxApp app = null;
+	        AmaxLogDevice device = null;
 	        for (Object object : keySet) {
 				if (jsonObject.get(object) instanceof String) {
-					
+
 					stringBuilder.append(jsonObject.getString((String)object)).append(spacers);
 				}
-				
+
 				if (jsonObject.get(object) instanceof JSONArray) {
-					
+
 					JSONArray jArray = jsonObject.getJSONArray((String)object);
 					for (Object obj : jArray) {
-						
+
 			        	if (object.toString().equals("bcat")) {
-							
+
 			        		bcatStr += ((String)obj + charSpacers);
 						} else if (object.toString().equals("badv")) {
-							
+
 			        		badvStr += ((String)obj + charSpacers);
 						} else {
-							
+
 							Imp impClass = (Imp) JSONObject.toBean((JSONObject)obj, Imp.class);
 							lists.add(impClass);
 						}
 					}
 				}
-				
+
 				if (object.toString().equals("app")) {
-					
-					app = (App) JSONObject.toBean(JSONObject.fromObject(jsonObject.get(object)), App.class);
+
+					app = (AmaxApp) JSONObject.toBean(JSONObject.fromObject(jsonObject.get(object)), AmaxApp.class);
 				}
-				
+
 				if (object.toString().equals("device")) {
-					
-					device = (Device) JSONObject.toBean(JSONObject.fromObject(jsonObject.get(object)), Device.class);
+
+					device = (AmaxLogDevice) JSONObject.toBean(JSONObject.fromObject(jsonObject.get(object)), AmaxLogDevice.class);
 				}
 			}
 	        //目前该列表中只有一个元素，简化处理。
 	        stringBuilder.append(lists.get(0).toString()).append(spacers).append(app.toString()).append(spacers).append(device.toString());
 	        if (bcatStr != null) {
-				
+
 	        	stringBuilder.append(spacers).append(bcatStr.substring(0, bcatStr.length() -1));
 			} else {
-				
+
 				stringBuilder.append(spacers).append(NULL);
 			}
 	        if (badvStr != null) {
-				
+
 	        	stringBuilder.append(spacers).append(badvStr.substring(0, badvStr.length() -1));
 			} else {
-				
+
 				stringBuilder.append(spacers).append(NULL);
 			}
 	        logger.debug("result string is " + stringBuilder.toString());

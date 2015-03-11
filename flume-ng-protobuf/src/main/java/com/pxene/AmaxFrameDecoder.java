@@ -23,7 +23,7 @@ public class AmaxFrameDecoder extends FrameDecoder {
                             ChannelBuffer buffer) throws Exception {
         if (buffer.readableBytes() < DATA_LENGTH) {
         	
-        	logger.warn("buffer length is less than 4 bytes");
+        	logger.debug("buffer length is less than 4 bytes");
         	return null;
         }
         buffer.markReaderIndex();

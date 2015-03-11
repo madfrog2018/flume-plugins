@@ -67,8 +67,8 @@ public class AmaxTcpSource extends AbstractSource
 	        }
 	        public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
 	                throws Exception {
-	            logger.debug("ChannelHandlerContext is " + ctx.getName());
-	            logger.debug("exception is " + e.toString());
+                e.getCause().printStackTrace();
+	            logger.debug("exception is " + e.getCause().getMessage());
 	        }
 
 	        @Override
@@ -104,7 +104,7 @@ public class AmaxTcpSource extends AbstractSource
                     e1.printStackTrace();
                 }
                 logger.debug("String is " + new String(byteBuffer.array()));
-                e = AmaxTcpSourceUtils.buildMessage(dateLong, byteBuffer.array());
+                e = AmaxTcpSourceUtils.parseMessage(dateLong, byteBuffer.array());
                 logger.debug("build message is over");
                 if (e != null) {
                     try {

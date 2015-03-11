@@ -17,7 +17,6 @@
 
   <modules>
     <module>flume-ng-protobuf</module>
-    <module>flume-ng-amax-hdfs</module>
   </modules>
   <dependencies>
     <dependency>

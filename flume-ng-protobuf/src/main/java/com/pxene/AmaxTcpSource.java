@@ -18,6 +18,7 @@
  */
 package com.pxene;
 
+import org.apache.commons.io.HexDump;
 import org.apache.flume.Context;
 import org.apache.flume.CounterGroup;
 import org.apache.flume.Event;
@@ -33,6 +34,7 @@ import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -74,20 +76,34 @@ public class AmaxTcpSource extends AbstractSource
 	                                    MessageEvent mEvent) {
 //	        	logger.info("message received is start");
 	            ChannelBuffer buffer = (ChannelBuffer) mEvent.getMessage();
+                logger.debug("recieve buffer length is " + buffer.readableBytes());
+                try {
+                    HexDump.dump(buffer.array(), 0, System.out, 0);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 //	            byte[] dateTimeBytes = new byte[8];
 //	            long dateLong = 0l;
 //	            buffer.readBytes(dateTimeBytes, 0, 8);
 //	            dateLong = AmaxTcpSourceUtils.byteArrayToLong(dateTimeBytes);
 //	            logger.debug("parse the dataLength is " + buffer.readableBytes());
                 long dateLong = buffer.readLong();
+                logger.debug("recieve buffer length after read long is " + buffer.readableBytes());
+
                 logger.debug("recieve date long is" + dateLong);
 //                logger.info("received the message date is " + dateLong);
 	            Event e = null;
 //                byte[] data = new byte[buffer.readableBytes()];
 //                buffer.readBytes(data, 0,buffer.readableBytes());
-                logger.debug("parse the dataLength is " + buffer.readableBytes());
+//                logger.debug("parse the dataLength is " + buffer.readableBytes());
                 ByteBuffer byteBuffer = ByteBuffer.allocate(buffer.readableBytes());
                 buffer.readBytes(byteBuffer);
+                try {
+                    HexDump.dump(byteBuffer.array(), 0, System.out, 0);
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                logger.debug("String is " + new String(byteBuffer.array()));
                 e = AmaxTcpSourceUtils.buildMessage(dateLong, byteBuffer.array());
                 logger.debug("build message is over");
                 if (e != null) {

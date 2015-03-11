@@ -40,7 +40,8 @@ public class AmaxFrameDecoder extends FrameDecoder {
         }
         ByteBuffer byteBuffer = ByteBuffer.allocate(nextBytesLength);
         ChannelBuffer channelBuffer = ChannelBuffers.wrappedBuffer(byteBuffer);
-        buffer.readBytes(nextBytesLength);
+//        buffer.readBytes(channelBuffer, nextBytesLength);
+        buffer.readBytes(byteBuffer);
 
 //        buffer.skipBytes(DATA_LENGTH);
 //        int readerIndex = buffer.readerIndex();

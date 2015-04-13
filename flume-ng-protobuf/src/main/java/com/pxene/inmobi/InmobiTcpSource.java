@@ -1,11 +1,5 @@
 package com.pxene.inmobi;
 
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.flume.Context;
 import org.apache.flume.CounterGroup;
 import org.apache.flume.Event;
@@ -16,22 +10,16 @@ import org.apache.flume.source.AbstractSource;
 import org.apache.flume.source.SyslogSourceConfigurationConstants;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFactory;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.DefaultChannelPipeline;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.jboss.netty.channel.*;
+import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.pxene.AmaxFrameDecoder;
-import com.pxene.AmaxTcpSourceUtils;
-import com.pxene.AmaxTcpSource.AmaxLogHandler;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class InmobiTcpSource extends AbstractSource implements
 		EventDrivenSource, Configurable {
@@ -104,7 +92,7 @@ public class InmobiTcpSource extends AbstractSource implements
 	@Override
 	public void start() {
 
-		ChannelFactory factory = new NioClientSocketChannelFactory(
+		ChannelFactory factory = new NioServerSocketChannelFactory(
 				Executors.newCachedThreadPool(),
 				Executors.newCachedThreadPool());
 		ServerBootstrap serverBootstrap = new ServerBootstrap(factory);
@@ -119,7 +107,7 @@ public class InmobiTcpSource extends AbstractSource implements
 				handler.setEventSize(eventSize);
 				handler.setFormater(formaterProp);
 				handler.setKeepFields(keepFields);
-				pipeline.addLast("FrameDecoder", new AmaxFrameDecoder());
+				pipeline.addLast("FrameDecoder", new InmobiFrameDecoder());
 				pipeline.addLast("handler", handler);
 				return pipeline;
 			}
@@ -163,7 +151,7 @@ public class InmobiTcpSource extends AbstractSource implements
 		host = context
 				.getString(SyslogSourceConfigurationConstants.CONFIG_HOST);
 		eventSize = context.getInteger("eventSize",
-				AmaxTcpSourceUtils.DEFAULT_SIZE);
+				InmobiTcpSourceUtils.DEFAULT_SIZE);
 		formaterProp = context
 				.getSubProperties(SyslogSourceConfigurationConstants.CONFIG_FORMAT_PREFIX);
 		keepFields = context.getBoolean(
